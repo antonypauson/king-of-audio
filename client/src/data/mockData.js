@@ -1,0 +1,121 @@
+// ---------------------------
+// Users (latest clip + cumulative time)
+// ---------------------------
+export const mockUsers = [
+  {
+    id: "user_joe_dane",
+    username: "joe_dane",
+    avatarUrl: "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=joe_dane",
+    totalTimeHeld: 12500, // cumulative time in seconds
+    currentClipUrl: "https://www.example.com/audio_joe.mp3",
+    currentReignStart: null,
+  },
+  {
+    id: "user_ihatebignannies",
+    username: "ihatebignannies",
+    avatarUrl:
+      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=ihatebignannies",
+    totalTimeHeld: 9800,
+    currentClipUrl: "https://www.example.com/audio_ihatebignannies.mp3",
+    currentReignStart: Date.now() - 8000,
+  },
+  {
+    id: "user_lina_rocks",
+    username: "lina_rocks",
+    avatarUrl:
+      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=lina_rocks",
+    totalTimeHeld: 7200,
+    currentClipUrl: "https://www.example.com/audio_lina.mp3",
+    currentReignStart: null, // currently not reigning
+  },
+  {
+    id: "user_mike_the_mic",
+    username: "mike_the_mic",
+    avatarUrl:
+      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=mike_the_mic",
+    totalTimeHeld: 4500,
+    currentClipUrl: "https://www.example.com/audio_mike.mp3",
+    currentReignStart: null,
+  },
+  {
+    id: "user_your_mom",
+    username: "your_mom",
+    avatarUrl:
+      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=your_mom",
+    totalTimeHeld: 4500,
+    currentClipUrl: "https://www.example.com/audio_mike.mp3",
+    currentReignStart: null,
+  },
+];
+
+// ---------------------------
+// Current Game State
+// ---------------------------
+export const mockCurrentGameState = {
+  currentUserId: "user_ihatebignannies",
+  currentClipUrl: "https://www.example.com/audio_ihatebignannies.mp3",
+  reignStart: Date.now() - 8000,
+};
+
+// ---------------------------
+// Activity Feed
+// ---------------------------
+export const mockActivityFeed = [
+  {
+    id: "event_001",
+    type: "takeover",
+    userId: "user_joe_dane",
+    targetUserId: "user_ihatebignannies",
+    timestamp: Date.now() - 12000,
+  },
+  {
+    id: "event_002",
+    type: "upload",
+    userId: "user_ihatebignannies",
+    timestamp: Date.now() - 8000,
+  },
+  {
+    id: "event_003",
+    type: "failed",
+    userId: "user_lina_rocks",
+    targetUserId: "user_ihatebignannies",
+    timestamp: Date.now() - 5000,
+  },
+  {
+    id: "event_004",
+    type: "dethroned",
+    userId: "user_mike_the_mic",
+    targetUserId: "user_joe_dane",
+    timestamp: Date.now() - 2000,
+  },
+];
+
+// ---------------------------
+// Helper to format activity feed text
+// ---------------------------
+export function formatActivity(event, usersMap) {
+  const secondsAgo = Math.floor((Date.now() - event.timestamp) / 1000);
+  const user = usersMap[event.userId];
+  const targetUser = event.targetUserId ? usersMap[event.targetUserId] : null;
+
+  switch (event.type) {
+    case "takeover":
+      return `${user.username} took over ${targetUser.username} (${secondsAgo}s ago)`;
+    case "dethroned":
+      return `${user.username} dethroned ${targetUser.username} (${secondsAgo}s ago)`;
+    case "upload":
+      return `${user.username} uploaded a new clip (${secondsAgo}s ago)`;
+    case "failed":
+      return `${user.username} tried to take over ${targetUser.username} but failed (${secondsAgo}s ago)`;
+    default:
+      return `${user.username} did something (${secondsAgo}s ago)`;
+  }
+}
+
+// ---------------------------
+// Example usersMap for easy lookup
+// ---------------------------
+export const usersMap = mockUsers.reduce((acc, user) => {
+  acc[user.id] = user;
+  return acc;
+}, {});
