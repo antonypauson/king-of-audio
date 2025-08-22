@@ -11,7 +11,8 @@ client/notes.md
 server/notes.md
 progress.md
 notes-to-myself.md
-node_modules
+server/node_modules
+client/node_modules
 dist
 dist-ssr
 *.local
