@@ -43,6 +43,9 @@ const getRankStyle = (rank: number, isCurrentReigning: boolean) => {
   if (isCurrentReigning) {
     return "bg-gradient-reign border-reign glow-reign";
   }
+  if (rank === 1) {
+    return "bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-crown/30";
+  }
   return "bg-card border-border hover:bg-secondary/50";
 };
 

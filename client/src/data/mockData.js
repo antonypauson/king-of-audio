@@ -98,17 +98,31 @@ export function formatActivity(event, usersMap) {
   const user = usersMap[event.userId];
   const targetUser = event.targetUserId ? usersMap[event.targetUserId] : null;
 
+  let timeAgoString;
+  if (secondsAgo < 60) {
+    timeAgoString = `${secondsAgo}s ago`;
+  } else if (secondsAgo < 3600) { // Less than 1 hour
+    const minutes = Math.floor(secondsAgo / 60);
+    timeAgoString = `${minutes}m ago`;
+  } else if (secondsAgo < 86400) { // Less than 1 day
+    const hours = Math.floor(secondsAgo / 3600);
+    timeAgoString = `${hours}h ago`;
+  } else {
+    const days = Math.floor(secondsAgo / 86400);
+    timeAgoString = `${days}d ago`;
+  }
+
   switch (event.type) {
     case "takeover":
-      return `${user.username} took over ${targetUser.username} (${secondsAgo}s ago)`;
+      return `${user.username} took over ${targetUser.username} (${timeAgoString})`;
     case "dethroned":
-      return `${user.username} dethroned ${targetUser.username} (${secondsAgo}s ago)`;
+      return `${user.username} dethroned ${targetUser.username} (${timeAgoString})`;
     case "upload":
-      return `${user.username} uploaded a new clip (${secondsAgo}s ago)`;
+      return `${user.username} uploaded a new audio (${timeAgoString})`;
     case "failed":
-      return `${user.username} tried to take over ${targetUser.username} but failed (${secondsAgo}s ago)`;
+      return `${user.username} tried to take over ${targetUser.username} but failed (${timeAgoString})`;
     default:
-      return `${user.username} did something (${secondsAgo}s ago)`;
+      return `${user.username} did something (${timeAgoString})`;
   }
 }
 

@@ -1,67 +1,46 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Crown, Mic, Timer, Trophy } from "lucide-react";
+import { Crown, Mic, Timer, Trophy, XCircle, Swords } from "lucide-react";
 
-interface Activity {
+import { mockActivityFeed, usersMap, formatActivity } from "@/data/mockData";
+
+interface ActivityEvent {
   id: string;
-  type: 'takeover' | 'record' | 'milestone';
-  user: {
-    name: string;
-    avatar: string;
-    initials: string;
-  };
-  description: string;
-  timestamp: string;
+  type: 'takeover' | 'upload' | 'failed' | 'dethroned';
+  userId: string;
+  targetUserId?: string;
+  timestamp: number;
 }
 
-const activities: Activity[] = [
-  {
-    id: '1',
-    type: 'takeover',
-    user: { name: 'Alex Storm', avatar: '', initials: 'AS' },
-    description: 'took over with an epic beat drop!',
-    timestamp: '2 min ago'
-  },
-  {
-    id: '2',
-    type: 'milestone',
-    user: { name: 'Jordan Beats', avatar: '', initials: 'JB' },
-    description: 'reached 5 audio wins milestone',
-    timestamp: '5 min ago'
-  },
-  {
-    id: '3',
-    type: 'record',
-    user: { name: 'Sam Melody', avatar: '', initials: 'SM' },
-    description: 'recorded a new audio challenge',
-    timestamp: '8 min ago'
-  },
-  {
-    id: '4',
-    type: 'takeover',
-    user: { name: 'Riley Bass', avatar: '', initials: 'RB' },
-    description: 'claimed the throne with sick vocals',
-    timestamp: '12 min ago'
-  },
-  {
-    id: '5',
-    type: 'record',
-    user: { name: 'Casey Vibe', avatar: '', initials: 'CV' },
-    description: 'dropped a fresh audio clip',
-    timestamp: '15 min ago'
-  }
-];
+const activities: ActivityEvent[] = [...mockActivityFeed].sort((a, b) => b.timestamp - a.timestamp);
 
-const getActivityIcon = (type: Activity['type']) => {
+const getActivityIcon = (type: ActivityEvent['type']) => {
   switch (type) {
     case 'takeover':
       return <Crown className="h-4 w-4 text-crown" />;
-    case 'record':
+    case 'upload':
       return <Mic className="h-4 w-4 text-neon-blue" />;
-    case 'milestone':
-      return <Trophy className="h-4 w-4 text-neon-green" />;
+    case 'failed':
+      return <XCircle className="h-4 w-4 text-destructive" />;
+    case 'dethroned':
+      return <Swords className="h-4 w-4 text-muted-foreground" />;
     default:
       return <Timer className="h-4 w-4 text-muted-foreground" />;
+  }
+};
+
+const getActivityCardStyle = (type: ActivityEvent['type']) => {
+  switch (type) {
+    case 'takeover':
+      return "border-crown/30";
+    case 'upload':
+      return "border-neon-green/30";
+    case 'failed':
+      return "border-destructive/30";
+    case 'dethroned':
+      return "border-primary/30";
+    default:
+      return "border-border";
   }
 };
 
@@ -76,33 +55,35 @@ export default function ActivityFeed() {
       </div>
       
       <div className="space-y-3">
-        {activities.map((activity) => (
-          <Card key={activity.id} className="p-3 bg-card border-border hover:bg-secondary/50 transition-colors">
-            <div className="flex items-start gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={activity.user.avatar} />
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
-                  {activity.user.initials}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  {getActivityIcon(activity.type)}
-                  <span className="text-sm font-medium text-foreground">
-                    {activity.user.name}
-                  </span>
+        {activities.map((event) => {
+          const user = usersMap[event.userId];
+          if (!user) return null; // Handle case where user might not be found
+
+          return (
+            <Card key={event.id} className={`p-3 transition-colors hover:bg-secondary/50 ${getActivityCardStyle(event.type)}`}>
+              <div className="flex items-start gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.avatarUrl} />
+                  <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                    {user.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {getActivityIcon(event.type)}
+                    <span className="text-sm font-medium text-foreground">
+                      {user.username}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {formatActivity(event, usersMap)}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {activity.description}
-                </p>
-                <span className="text-xs text-muted-foreground mt-1 block">
-                  {activity.timestamp}
-                </span>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
