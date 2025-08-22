@@ -89,7 +89,7 @@ export default function Leaderboard() {
               
               <div className="text-right">
                 <Badge 
-                  variant={player.rank <= 3 ? "default" : "secondary"}
+                  variant="secondary"
                   className={player.rank === 1 ? "bg-crown text-background" : ""}
                 >
                   {formatTime(player.totalTimeHeld)}

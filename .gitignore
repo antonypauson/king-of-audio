@@ -8,11 +8,13 @@ pnpm-debug.log*
 lerna-debug.log*
 
 client/notes.md
+client/error.txt
 server/notes.md
 progress.md
 notes-to-myself.md
 server/node_modules
 client/node_modules
+node_modules
 dist
 dist-ssr
 *.local
