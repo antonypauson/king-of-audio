@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Audio Boy Game Theme */
+    --background: 240 10% 8%;
+    --foreground: 220 15% 95%;
+
+    --card: 240 8% 12%;
+    --card-foreground: 220 15% 95%;
+
+    --popover: 240 8% 12%;
+    --popover-foreground: 220 15% 95%;
+
+    --primary: 270 100% 65%;
+    --primary-foreground: 240 10% 8%;
+
+    --secondary: 240 6% 18%;
+    --secondary-foreground: 220 15% 95%;
+
+    --muted: 240 6% 15%;
+    --muted-foreground: 220 10% 65%;
+
+    --accent: 280 100% 70%;
+    --accent-foreground: 240 10% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 15% 95%;
+
+    --border: 240 6% 20%;
+    --input: 240 6% 15%;
+    --ring: 270 100% 65%;
+
+    /* Audio Boy Custom Colors */
+    --neon-blue: 200 100% 60%;
+    --neon-purple: 270 100% 65%;
+    --neon-pink: 320 100% 70%;
+    --neon-green: 120 100% 60%;
+    --crown-gold: 45 100% 65%;
+    --reign-glow: 270 100% 65%;
+    --audio-wave: 200 100% 60%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-pink)));
+    --gradient-player: linear-gradient(145deg, hsl(var(--card)), hsl(var(--secondary)));
+    --gradient-reign: linear-gradient(135deg, hsl(var(--neon-purple) / 0.3), hsl(var(--neon-pink) / 0.3));
+    
+    /* Shadows & Effects */
+    --glow-primary: 0 0 20px hsl(var(--neon-purple) / 0.5);
+    --glow-reign: 0 0 30px hsl(var(--reign-glow) / 0.8);
+    --shadow-card: 0 8px 32px hsl(240 10% 3% / 0.8);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Same theme for consistency - Audio Boy is dark by design */
+    --background: 240 10% 8%;
+    --foreground: 220 15% 95%;
+    --card: 240 8% 12%;
+    --card-foreground: 220 15% 95%;
+    --popover: 240 8% 12%;
+    --popover-foreground: 220 15% 95%;
+    --primary: 270 100% 65%;
+    --primary-foreground: 240 10% 8%;
+    --secondary: 240 6% 18%;
+    --secondary-foreground: 220 15% 95%;
+    --muted: 240 6% 15%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 280 100% 70%;
+    --accent-foreground: 240 10% 8%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 15% 95%;
+    --border: 240 6% 20%;
+    --input: 240 6% 15%;
+    --ring: 270 100% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer utilities {
+  .audio-wave {
+    @apply bg-gradient-to-t from-blue-500 to-purple-500;
+    animation: wave 0.8s ease-in-out infinite alternate;
+  }
+  
+  .glow-reign {
+    box-shadow: var(--glow-reign);
+  }
+  
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+}
+
+@keyframes wave {
+  0% { height: 20%; }
+  100% { height: 100%; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px hsl(var(--neon-purple) / 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 40px hsl(var(--neon-purple) / 0.8);
+  }
+}
+
+@keyframes reign-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 30px hsl(var(--reign-glow) / 0.6);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 50px hsl(var(--reign-glow) / 1);
+    transform: scale(1.02);
+  }
+}
