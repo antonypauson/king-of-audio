@@ -96,11 +96,17 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
 
   useEffect(() => {
     // Initialize AudioContext and source node only once
-    if (!audioContextRef.current && audioRef.current) {
+    // Ensure audioRef.current is available and AudioContext is not already created
+    if (audioRef.current && !audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       analyserRef.current = audioContextRef.current.createAnalyser();
-      sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
-      sourceRef.current.connect(analyserRef.current);
+      
+      // Only create MediaElementAudioSourceNode if it hasn't been created yet
+      if (!sourceRef.current) {
+        sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+        sourceRef.current.connect(analyserRef.current);
+      }
+      
       analyserRef.current.connect(audioContextRef.current.destination);
       analyserRef.current.fftSize = 2048; // Adjust for desired detail
       setIsAudioContextReady(true);
@@ -115,7 +121,7 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
         sourceRef.current = null;
       }
     };
-  }, []); // Empty dependency array to run only once on mount
+  }, [audioRef.current]); // <--- Added audioRef.current to dependencies
 
   useEffect(() => {
     if (!analyserRef.current || !audioContextRef.current) return;
@@ -176,7 +182,13 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
   }, [isRecording, analyserRef, audioContextRef, sourceRef]); // Dependencies
 
   useEffect(() => {
+    console.log("Waveform useEffect running.");
+    console.log("isAudioContextReady:", isAudioContextReady);
+    console.log("analyserRef.current:", analyserRef.current);
+    console.log("canvasRef.current:", canvasRef.current);
+
     if (!isAudioContextReady || !analyserRef.current || !canvasRef.current) {
+      console.log("Waveform useEffect: Missing dependencies, returning.");
       return;
     }
 
