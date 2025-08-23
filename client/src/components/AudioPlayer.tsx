@@ -74,6 +74,7 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
       onNewActivityEvent(newEvent);
       console.log("Added new 'upload' event to mockActivityFeed via prop.");
 
+
       // Update reigningPlayer state with the new audioBlobUrl
       setReigningPlayer(prevPlayer => {
         if (prevPlayer) {
@@ -91,7 +92,7 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
         };
       }
     }
-  }, [audioBlobUrl, isPlaying]);
+  }, [audioBlobUrl, onNewActivityEvent]);
 
   useEffect(() => {
     // Initialize AudioContext and source node only once

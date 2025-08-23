@@ -112,7 +112,7 @@ export function addMockActivityEvent(currentFeed, newEvent) {
 // current user?
 // ---------------------------
 export const mockCurrentUser = {
-  id: "user_ihatebignannies"
+  id: "user_mike_the_mic"
 };
 
 

@@ -1,4 +1,4 @@
-import { useState } from "react"; // Added
+import { useState, useCallback } from "react"; // Added useCallback
 import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -8,9 +8,9 @@ const Index = () => {
   const [activityFeed, setActivityFeed] = useState(initialMockActivityFeed);
 
   // Function to handle new activity events from children
-  const handleNewActivityEvent = (newEvent: any) => {
+  const handleNewActivityEvent = useCallback((newEvent: any) => {
     setActivityFeed((prev) => [...prev, newEvent]);
-  };
+  }, [setActivityFeed]); // Dependency array for useCallback
 
   return (
     <div className="min-h-screen bg-background">
