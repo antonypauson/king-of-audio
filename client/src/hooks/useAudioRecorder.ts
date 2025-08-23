@@ -25,43 +25,38 @@ export const useAudioRecorder = (): AudioRecorderHook => {
         audioChunksRef.current.push(event.data);
       };
 
+      // Consolidated onstop assignment
       mediaRecorderRef.current.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         setAudioBlobUrl(url);
         setIsRecording(false);
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // <--- Added this line
+        // No need for clearTimeout(timeoutId) here, as it's handled by the timeout itself
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
 
       // Force stop after 10 seconds as a fallback
-      const timeoutId = setTimeout(() => {
-        if (mediaRecorderRef.current) {
+      setTimeout(() => { // Removed timeoutId assignment, as it's not cleared here
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') { // Check state before stopping
           mediaRecorderRef.current.stop();
         }
       }, 10000);
 
-      // Store timeoutId to clear it if stopRecording is called manually
-      mediaRecorderRef.current.onstop = () => {
-        clearTimeout(timeoutId);
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioBlobUrl(url);
-        setIsRecording(false);
-      };
-
     } catch (err) {
       console.error('Error accessing microphone:', err);
       setIsRecording(false);
+      mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // <--- Also stop on error
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') { // Check state
       mediaRecorderRef.current.stop();
-      mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // Stop media stream tracks here
     }
+    mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // Always stop tracks
   };
 
   useEffect(() => {
