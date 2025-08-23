@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, Mic, Upload, Crown } from "lucide-react";
-import { mockUsers, mockCurrentGameState } from "../data/mockData";
+import { mockUsers, mockCurrentGameState, mockCurrentUser } from "../data/mockData";
 import { useAudioRecorder } from "../hooks/useAudioRecorder";
 
 interface CurrentPlayer {
@@ -18,14 +18,14 @@ interface CurrentPlayer {
 export default function AudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reignDuration, setReignDuration] = useState("");
-  const [currentPlayer, setCurrentPlayer] = useState<CurrentPlayer | null>(null);
+  const [reigningPlayer, setReigningPlayer] = useState<CurrentPlayer | null>(null);
 
   const { isRecording, audioBlobUrl, startRecording, stopRecording } = useAudioRecorder();
 
   useEffect(() => {
     const currentUser = mockUsers.find(user => user.id === mockCurrentGameState.currentUserId);
     if (currentUser) {
-      setCurrentPlayer({
+      setReigningPlayer({
         name: currentUser.username,
         avatar: currentUser.avatarUrl,
         initials: currentUser.username.substring(0, 2).toUpperCase(),
@@ -36,11 +36,11 @@ export default function AudioPlayer() {
   }, []);
 
   useEffect(() => {
-    if (!currentPlayer) return;
+    if (!reigningPlayer) return;
 
     const updateTimer = () => {
       const now = new Date();
-      const diff = now.getTime() - currentPlayer.reignStartTime.getTime();
+      const diff = now.getTime() - reigningPlayer.reignStartTime.getTime();
       const minutes = Math.floor(diff / 60000);
       const seconds = Math.floor((diff % 60000) / 1000);
       setReignDuration(`${minutes}:${seconds.toString().padStart(2, '0')}`);
@@ -49,22 +49,24 @@ export default function AudioPlayer() {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [currentPlayer]);
+  }, [reigningPlayer]);
 
   useEffect(() => {
     if (audioBlobUrl) {
       console.log("New audio URL:", audioBlobUrl);
       // Simulate updating mockUsers
+      // Corrected logic: Update currentClipUrl for the user whose ID matches mockCurrentUser's ID.
+      // This ensures the recorded audio is associated with the designated current user.
       const updatedMockUsers = mockUsers.map(user => {
-        if (user.id === mockCurrentGameState.currentUserId) {
+        if (user.id === mockCurrentUser.id) {
           return { ...user, currentClipUrl: audioBlobUrl };
         }
         return user;
       });
       console.log("Simulated updated mockUsers:", updatedMockUsers);
 
-      // Update currentPlayer state with the new audioBlobUrl
-      setCurrentPlayer(prevPlayer => {
+      // Update reigningPlayer state with the new audioBlobUrl
+      setReigningPlayer(prevPlayer => {
         if (prevPlayer) {
           return { ...prevPlayer, currentClipUrl: audioBlobUrl };
         }
@@ -80,14 +82,14 @@ export default function AudioPlayer() {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.src = currentPlayer.currentClipUrl; // Set src to currentClipUrl
+        audioRef.current.src = reigningPlayer.currentClipUrl; // Set src to currentClipUrl
         audioRef.current.play().catch(e => console.error("Error playing audio:", e));
       }
       setIsPlaying(!isPlaying);
     }
   };
 
-  if (!currentPlayer) {
+  if (!reigningPlayer) {
     return <div>Loading audio player...</div>; // Or a loading spinner
   }
 
@@ -101,16 +103,16 @@ export default function AudioPlayer() {
         </div>
         <div className="relative mb-4">
           <Avatar className="h-24 w-24 mx-auto border-4 border-crown shadow-glow-reign animate-reign-pulse">
-            <AvatarImage src={currentPlayer.avatar} />
+            <AvatarImage src={reigningPlayer.avatar} />
             <AvatarFallback className="bg-gradient-primary text-primary-foreground text-2xl font-bold">
-              {currentPlayer.initials}
+              {reigningPlayer.initials}
             </AvatarFallback>
           </Avatar>
           <div className="absolute -top-2 -right-2"></div>
         </div>
 
         <h3 className="text-2xl font-bold text-foreground mb-1">
-          {currentPlayer.name}
+          {reigningPlayer.name}
         </h3>
 
         <div className="flex items-center justify-center gap-2 mb-6">
