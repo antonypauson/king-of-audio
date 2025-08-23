@@ -132,6 +132,18 @@ All colors MUST be HSL.
   .glowing-border:hover {
     box-shadow: 0 0 25px hsl(var(--neon-purple) / 1), inset 0 0 25px hsl(var(--neon-purple) / 1);
   }
+
+  .glowing-border-recording {
+    border: 2px solid hsl(0 84% 60%); /* Red color for recording */
+    box-shadow: 0 0 15px hsl(0 84% 60% / 0.7), inset 0 0 15px hsl(0 84% 60% / 0.7);
+    animation: pulse-red-glow 1.5s infinite alternate;
+  }
+
+  .glowing-border-playing {
+    border: 2px solid hsl(50 100% 60%); /* Yellow color for playing */
+    box-shadow: 0 0 15px hsl(50 100% 60% / 0.7), inset 0 0 15px hsl(50 100% 60% / 0.7);
+    animation: pulse-yellow-glow 1.5s infinite alternate;
+  }
 }
 
 @keyframes wave {
@@ -145,6 +157,24 @@ All colors MUST be HSL.
   }
   50% { 
     box-shadow: 0 0 40px hsl(var(--neon-purple) / 0.8);
+  }
+}
+
+@keyframes pulse-red-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px hsl(0 84% 60% / 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 40px hsl(0 84% 60% / 0.8);
+  }
+}
+
+@keyframes pulse-yellow-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px hsl(50 100% 60% / 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 40px hsl(50 100% 60% / 0.8);
   }
 }
 

@@ -37,7 +37,7 @@ export const useAudioRecorder = (): AudioRecorderHook => {
 
       // Force stop after 10 seconds as a fallback
       const timeoutId = setTimeout(() => {
-        if (mediaRecorderRef.current && isRecording) {
+        if (mediaRecorderRef.current) {
           mediaRecorderRef.current.stop();
         }
       }, 10000);
@@ -49,7 +49,6 @@ export const useAudioRecorder = (): AudioRecorderHook => {
         const url = URL.createObjectURL(audioBlob);
         setAudioBlobUrl(url);
         setIsRecording(false);
-        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
       };
 
     } catch (err) {
@@ -61,6 +60,7 @@ export const useAudioRecorder = (): AudioRecorderHook => {
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
+      mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // Stop media stream tracks here
     }
   };
 

@@ -94,7 +94,9 @@ export default function AudioPlayer() {
   }
 
   return (
-    <Card className="p-8 bg-gradient-player border-border shadow-card glowing-border">
+    <Card className={`p-8 bg-gradient-player border-border shadow-card ${
+      isRecording ? 'glowing-border-recording' : isPlaying ? 'glowing-border-playing' : 'glowing-border'
+    }`}>
       <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
@@ -156,7 +158,11 @@ export default function AudioPlayer() {
           variant="outline"
           size="lg"
           onClick={isRecording ? stopRecording : startRecording}
-          className="w-[180px] border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-background transition-all duration-300 glow-primary"
+          className={`w-[180px] transition-all duration-300 glow-primary ${
+            isRecording
+              ? "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              : "border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-background"
+          }`}
         >
           <Mic className="h-5 w-5 mr-2" />
           {isRecording ? "Stop Recording" : "Record Audio"}
