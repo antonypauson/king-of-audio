@@ -75,7 +75,7 @@ export const useAudioRecorder = (): AudioRecorderHook => {
         URL.revokeObjectURL(audioBlobUrl);
       }
     };
-  }, [audioBlobUrl]);
+  }, []);
 
   return {
     isRecording,
