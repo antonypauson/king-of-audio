@@ -1,7 +1,7 @@
 // ---------------------------
 // Users (latest clip + cumulative time)
 // ---------------------------
-export const mockUsers = [
+export let mockUsers = [ 
   {
     id: "user_joe_dane",
     username: "joe_dane",
@@ -48,6 +48,17 @@ export const mockUsers = [
   },
 ];
 
+// Helper function to update a user's clip URL and reign start
+export function updateMockUserClipAndReign(userId, newClipUrl, newReignStart) {
+  mockUsers = mockUsers.map(user => {
+    if (user.id === userId) {
+      return { ...user, currentClipUrl: newClipUrl, currentReignStart: newReignStart };
+    }
+    return user;
+  });
+  console.log("mockUsers updated:", mockUsers); // Log for verification
+}
+
 // ---------------------------
 // Current Game State
 // ---------------------------
@@ -58,9 +69,9 @@ export const mockCurrentGameState = {
 };
 
 // ---------------------------
-// Activity Feed
+// Activity Feedv (initial, cause we will be mutating it but not directly)
 // ---------------------------
-export const mockActivityFeed = [
+export const initialMockActivityFeed = [ 
   {
     id: "event_001",
     type: "takeover",
@@ -90,8 +101,15 @@ export const mockActivityFeed = [
   },
 ];
 
+// Helper function to add an activity event (returns new array, doesn't mutate)
+export function addMockActivityEvent(currentFeed, newEvent) {
+  const updatedFeed = [...currentFeed, newEvent];
+  console.log("addMockActivityEvent: new feed created:", updatedFeed);
+  return updatedFeed;
+}
+
 // ---------------------------
-// current user? 
+// current user?
 // ---------------------------
 export const mockCurrentUser = {
   id: "user_ihatebignannies"

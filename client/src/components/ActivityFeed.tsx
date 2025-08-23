@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Mic, Timer, Trophy, XCircle, Swords } from "lucide-react";
 
-import { mockActivityFeed, usersMap, formatActivity } from "@/data/mockData";
+import { usersMap, formatActivity } from "@/data/mockData"; // Removed mockActivityFeed
 
 interface ActivityEvent {
   id: string;
@@ -12,39 +12,40 @@ interface ActivityEvent {
   timestamp: number;
 }
 
-const activities: ActivityEvent[] = [...mockActivityFeed].sort((a, b) => b.timestamp - a.timestamp);
+// Accept activityFeed as a prop
+export default function ActivityFeed({ activityFeed }: { activityFeed: ActivityEvent[] }) { // Added prop
+  const activities: ActivityEvent[] = [...activityFeed].sort((a, b) => b.timestamp - a.timestamp); // Used prop
 
-const getActivityIcon = (type: ActivityEvent['type']) => {
-  switch (type) {
-    case 'takeover':
-      return <Crown className="h-4 w-4 text-crown" />;
-    case 'upload':
-      return <Mic className="h-4 w-4 text-neon-blue" />;
-    case 'failed':
-      return <XCircle className="h-4 w-4 text-destructive" />;
-    case 'dethroned':
-      return <Swords className="h-4 w-4 text-muted-foreground" />;
-    default:
-      return <Timer className="h-4 w-4 text-muted-foreground" />;
-  }
-};
+  const getActivityIcon = (type: ActivityEvent['type']) => {
+    switch (type) {
+      case 'takeover':
+        return <Crown className="h-4 w-4 text-crown" />;
+      case 'upload':
+        return <Mic className="h-4 w-4 text-neon-blue" />;
+      case 'failed':
+        return <XCircle className="h-4 w-4 text-destructive" />;
+      case 'dethroned':
+        return <Swords className="h-4 w-4 text-muted-foreground" />;
+      default:
+        return <Timer className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
 
-const getActivityCardStyle = (type: ActivityEvent['type']) => {
-  switch (type) {
-    case 'takeover':
-      return "border-crown/30";
-    case 'upload':
-      return "border-neon-green/30";
-    case 'failed':
-      return "border-destructive/30";
-    case 'dethroned':
-      return "border-primary/30";
-    default:
-      return "border-border";
-  }
-};
+  const getActivityCardStyle = (type: ActivityEvent['type']) => {
+    switch (type) {
+      case 'takeover':
+        return "border-crown/30";
+      case 'upload':
+        return "border-neon-green/30";
+      case 'failed':
+        return "border-destructive/30";
+      case 'dethroned':
+        return "border-primary/30";
+      default:
+        return "border-border";
+    }
+  };
 
-export default function ActivityFeed() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-6">
@@ -53,7 +54,7 @@ export default function ActivityFeed() {
           Activity Feed
         </h2>
       </div>
-      
+
       <div className="space-y-3">
         {activities.map((event) => {
           const user = usersMap[event.userId];
@@ -68,7 +69,7 @@ export default function ActivityFeed() {
                     {user.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {getActivityIcon(event.type)}

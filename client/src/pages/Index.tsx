@@ -1,8 +1,17 @@
+import { useState } from "react"; // Added
 import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
+import { initialMockActivityFeed } from "../data/mockData"; // Added
 
 const Index = () => {
+  const [activityFeed, setActivityFeed] = useState(initialMockActivityFeed);
+
+  // Function to handle new activity events from children
+  const handleNewActivityEvent = (newEvent: any) => {
+    setActivityFeed((prev) => [...prev, newEvent]);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -32,13 +41,13 @@ const Index = () => {
           {/* Left Sidebar - Activity Feed */}
           <aside className="lg:col-span-1">
             <div className="sticky top-32">
-              <ActivityFeed />
+              <ActivityFeed activityFeed={activityFeed} /> {/* Passed prop */}
             </div>
           </aside>
 
           {/* Center - Audio Player */}
           <section className="lg:col-span-2">
-            <AudioPlayer />
+            <AudioPlayer onNewActivityEvent={handleNewActivityEvent} /> {/* Passed prop */}
           </section>
 
           {/* Right Sidebar - Leaderboard */}

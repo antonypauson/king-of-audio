@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, Mic, Upload, Crown } from "lucide-react";
-import { mockUsers, mockCurrentGameState, mockCurrentUser } from "../data/mockData";
+import { mockUsers, mockCurrentGameState, mockCurrentUser, updateMockUserClipAndReign, addMockActivityEvent } from "../data/mockData";
 import { useAudioRecorder } from "../hooks/useAudioRecorder";
 
 interface CurrentPlayer {
@@ -15,7 +15,7 @@ interface CurrentPlayer {
   currentClipUrl: string;
 }
 
-export default function AudioPlayer() {
+export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent: (event: any) => void }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reignDuration, setReignDuration] = useState("");
   const [reigningPlayer, setReigningPlayer] = useState<CurrentPlayer | null>(null);
@@ -61,15 +61,18 @@ export default function AudioPlayer() {
 
   useEffect(() => {
     if (audioBlobUrl) {
-      // Simulate updating mockUsers
-      // Corrected logic: Update currentClipUrl for the user whose ID matches mockCurrentUser's ID.
-      // This ensures the recorded audio isF associated with the designated current user.
-      const updatedMockUsers = mockUsers.map(user => {
-        if (user.id === mockCurrentUser.id) {
-          return { ...user, currentClipUrl: audioBlobUrl };
-        }
-        return user;
-      });
+      // Update mockUsers with the new clip URL and reign start time
+      updateMockUserClipAndReign(mockCurrentUser.id, audioBlobUrl, Date.now());
+
+      const newEvent = {
+        id: `event_${Date.now()}`, // Unique ID for the event
+        type: "upload",
+        userId: mockCurrentUser.id,
+        timestamp: Date.now(),
+      };
+      // Call the prop function to update activity feed in parent
+      onNewActivityEvent(newEvent);
+      console.log("Added new 'upload' event to mockActivityFeed via prop.");
 
       // Update reigningPlayer state with the new audioBlobUrl
       setReigningPlayer(prevPlayer => {
@@ -91,10 +94,8 @@ export default function AudioPlayer() {
   }, [audioBlobUrl, isPlaying]);
 
   useEffect(() => {
-    if (!audioRef.current) return;
-
     // Initialize AudioContext and source node only once
-    if (!audioContextRef.current) {
+    if (!audioContextRef.current && audioRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       analyserRef.current = audioContextRef.current.createAnalyser();
       sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
@@ -113,7 +114,7 @@ export default function AudioPlayer() {
         sourceRef.current = null;
       }
     };
-  }, [audioRef.current]); // eslint-disable-line react-hooks/exhaustive-deps // Dependency on audioRef.current to ensure audio element is available
+  }, []); // Empty dependency array to run only once on mount
 
   useEffect(() => {
     if (!analyserRef.current || !audioContextRef.current) return;
