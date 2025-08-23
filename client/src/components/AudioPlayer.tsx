@@ -4,28 +4,35 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, Mic, Upload, Crown } from "lucide-react";
+import { mockUsers, mockCurrentGameState } from "../data/mockData";
 
 interface CurrentPlayer {
   name: string;
   avatar: string;
   initials: string;
-  audioTitle: string;
   reignStartTime: Date;
 }
-
-const currentPlayer: CurrentPlayer = {
-  name: "Alex Storm",
-  avatar: "",
-  initials: "AS",
-  audioTitle: "Epic Beat Drop Mastery",
-  reignStartTime: new Date(Date.now() - 7 * 60 * 1000) // 7 minutes ago
-};
 
 export default function AudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reignDuration, setReignDuration] = useState("");
+  const [currentPlayer, setCurrentPlayer] = useState<CurrentPlayer | null>(null);
 
   useEffect(() => {
+    const currentUser = mockUsers.find(user => user.id === mockCurrentGameState.currentUserId);
+    if (currentUser) {
+      setCurrentPlayer({
+        name: currentUser.username,
+        avatar: currentUser.avatarUrl,
+        initials: currentUser.username.substring(0, 2).toUpperCase(),
+        reignStartTime: new Date(mockCurrentGameState.reignStart),
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentPlayer) return;
+
     const updateTimer = () => {
       const now = new Date();
       const diff = now.getTime() - currentPlayer.reignStartTime.getTime();
@@ -37,22 +44,23 @@ export default function AudioPlayer() {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentPlayer]);
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
   };
 
+  if (!currentPlayer) {
+    return <div>Loading audio player...</div>; // Or a loading spinner
+  }
+
   return (
     <Card className="p-8 bg-gradient-player border-border shadow-card">
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Crown className="h-5 w-5 text-crown animate-pulse-glow" />
-          <Badge className="bg-gradient-primary text-primary-foreground font-medium">
-            Current Reigning Champion
-          </Badge>
+          {/* <Crown className="h-5 w-5 text-crown animate-pulse-glow" /> */}
+          <Crown className="h-8 w-8 text-crown drop-shadow-lg" />
         </div>
-        
         <div className="relative mb-4">
           <Avatar className="h-24 w-24 mx-auto border-4 border-crown shadow-glow-reign animate-reign-pulse">
             <AvatarImage src={currentPlayer.avatar} />
@@ -60,18 +68,13 @@ export default function AudioPlayer() {
               {currentPlayer.initials}
             </AvatarFallback>
           </Avatar>
-          <div className="absolute -top-2 -right-2">
-            <Crown className="h-8 w-8 text-crown drop-shadow-lg" />
-          </div>
+          <div className="absolute -top-2 -right-2"></div>
         </div>
 
         <h3 className="text-2xl font-bold text-foreground mb-1">
           {currentPlayer.name}
         </h3>
-        <p className="text-lg text-muted-foreground mb-2">
-          "{currentPlayer.audioTitle}"
-        </p>
-        
+
         <div className="flex items-center justify-center gap-2 mb-6">
           <Badge variant="secondary" className="text-sm">
             Reigning for {reignDuration}
@@ -85,11 +88,11 @@ export default function AudioPlayer() {
           <div
             key={i}
             className={`w-2 bg-gradient-to-t from-neon-blue to-neon-purple rounded-full ${
-              isPlaying ? 'audio-wave' : 'h-2'
+              isPlaying ? "audio-wave" : "h-2"
             }`}
             style={{
               animationDelay: isPlaying ? `${i * 0.1}s` : undefined,
-              height: isPlaying ? undefined : Math.random() * 50 + 10 + '%'
+              height: isPlaying ? undefined : Math.random() * 50 + 10 + "%",
             }}
           />
         ))}
@@ -107,7 +110,7 @@ export default function AudioPlayer() {
           ) : (
             <Play className="h-6 w-6 mr-2" />
           )}
-          {isPlaying ? 'Pause' : 'Play Audio'}
+          {isPlaying ? "Pause" : "Play Audio"}
         </Button>
       </div>
 
