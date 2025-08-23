@@ -19,6 +19,13 @@ export default function AudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reignDuration, setReignDuration] = useState("");
   const [reigningPlayer, setReigningPlayer] = useState<CurrentPlayer | null>(null);
+  const [isAudioContextReady, setIsAudioContextReady] = useState(false);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
   const { isRecording, audioBlobUrl, startRecording, stopRecording } = useAudioRecorder();
 
@@ -53,17 +60,15 @@ export default function AudioPlayer() {
 
   useEffect(() => {
     if (audioBlobUrl) {
-      console.log("New audio URL:", audioBlobUrl);
       // Simulate updating mockUsers
       // Corrected logic: Update currentClipUrl for the user whose ID matches mockCurrentUser's ID.
-      // This ensures the recorded audio is associated with the designated current user.
+      // This ensures the recorded audio isF associated with the designated current user.
       const updatedMockUsers = mockUsers.map(user => {
         if (user.id === mockCurrentUser.id) {
           return { ...user, currentClipUrl: audioBlobUrl };
         }
         return user;
       });
-      console.log("Simulated updated mockUsers:", updatedMockUsers);
 
       // Update reigningPlayer state with the new audioBlobUrl
       setReigningPlayer(prevPlayer => {
@@ -77,12 +82,106 @@ export default function AudioPlayer() {
       // then play the newly recorded audio.
       if (isPlaying && audioRef.current) {
         audioRef.current.src = audioBlobUrl;
-        audioRef.current.play().catch(e => console.error("Error playing new audio:", e));
+        audioRef.current.onloadeddata = () => {
+          audioRef.current?.play().catch(e => console.error("Error playing new audio:", e));
+        };
       }
     }
   }, [audioBlobUrl, isPlaying]);
 
-  const audioRef = useRef<HTMLAudioElement>(null);
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    // Initialize AudioContext and source node only once
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+      sourceRef.current.connect(analyserRef.current);
+      analyserRef.current.connect(audioContextRef.current.destination);
+      analyserRef.current.fftSize = 2048; // Adjust for desired detail
+      setIsAudioContextReady(true);
+    }
+
+    return () => {
+      // Clean up AudioContext on component unmount
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+        analyserRef.current = null;
+        sourceRef.current = null;
+      }
+    };
+  }, [audioRef.current]); // eslint-disable-line react-hooks/exhaustive-deps // Dependency on audioRef.current to ensure audio element is available
+
+  useEffect(() => {
+    if (!isAudioContextReady || !analyserRef.current || !canvasRef.current) {
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    let animationFrameId: number;
+
+    const drawWaveform = () => {
+      animationFrameId = requestAnimationFrame(drawWaveform);
+
+      analyserRef.current!.getByteTimeDomainData(dataArray);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Set canvas dimensions to match CSS for proper scaling
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      ctx.lineWidth = 2;
+      // Use a gradient similar to the original design
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+      gradient.addColorStop(0, '#8A2BE2'); // Neon Purple
+      gradient.addColorStop(1, '#00FFFF'); // Neon Blue
+      ctx.strokeStyle = gradient;
+
+      ctx.beginPath();
+
+      const sliceWidth = canvas.width * 1.0 / bufferLength;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * canvas.height / 2;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+
+        x += sliceWidth;
+      }
+
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+    };
+
+    drawWaveform();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [analyserRef, canvasRef, isAudioContextReady]); // Dependencies on analyserRef, canvasRef, and isAudioContextReady
+
+  
+
+  
+
+  
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -99,7 +198,9 @@ export default function AudioPlayer() {
         }
         // If not recording, proceed to play current clip
         audioRef.current.src = reigningPlayer.currentClipUrl; // Set src to currentClipUrl
-        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+        audioRef.current.onloadeddata = () => {
+          audioRef.current?.play().catch(e => console.error("Error playing audio:", e));
+        };
         setIsPlaying(true);
       }
     }
@@ -140,21 +241,8 @@ export default function AudioPlayer() {
         </div>
       </div>
 
-      {/* Audio Waveform Animation */}
-      <div className="flex items-end justify-center gap-1 h-16 mb-8">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className={`w-2 bg-gradient-to-t from-neon-blue to-neon-purple rounded-full ${
-              isPlaying ? "audio-wave" : "h-2"
-            }`}
-            style={{
-              animationDelay: isPlaying ? `${i * 0.1}s` : undefined,
-              height: isPlaying ? undefined : Math.random() * 50 + 10 + "%",
-            }}
-          />
-        ))}
-      </div>
+      {/* Dynamic Audio Waveform */}
+      <canvas ref={canvasRef} className="w-full h-16 mb-8"></canvas>
 
       {/* Play Controls and Record/Upload Actions */}
       <div className="flex gap-3 justify-center mb-8">
