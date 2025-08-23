@@ -72,8 +72,15 @@ export default function AudioPlayer() {
         }
         return null;
       });
+
+      // If we are in a playing state and audioBlobUrl just updated (meaning a recording just finished)
+      // then play the newly recorded audio.
+      if (isPlaying && audioRef.current) {
+        audioRef.current.src = audioBlobUrl;
+        audioRef.current.play().catch(e => console.error("Error playing new audio:", e));
+      }
     }
-  }, [audioBlobUrl]);
+  }, [audioBlobUrl, isPlaying]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -81,11 +88,20 @@ export default function AudioPlayer() {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false); // Explicitly set to false when pausing
       } else {
+        if (isRecording) {
+          stopRecording(); // This will eventually update audioBlobUrl
+          // DO NOT set src and play here immediately.
+          // The useEffect for audioBlobUrl will handle playing the new audio.
+          setIsPlaying(true); // Set isPlaying to true, so useEffect knows to play
+          return; // Exit to let useEffect handle the play
+        }
+        // If not recording, proceed to play current clip
         audioRef.current.src = reigningPlayer.currentClipUrl; // Set src to currentClipUrl
         audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+        setIsPlaying(true);
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -157,7 +173,17 @@ export default function AudioPlayer() {
         <Button
           variant="outline"
           size="lg"
-          onClick={isRecording ? stopRecording : startRecording}
+          onClick={() => {
+            if (isRecording) {
+              stopRecording();
+            } else {
+              if (isPlaying) {
+                audioRef.current.pause();
+                setIsPlaying(false);
+              }
+              startRecording();
+            }
+          }}
           className={`w-[180px] transition-all duration-300 glow-primary ${
             isRecording
               ? "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
