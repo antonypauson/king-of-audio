@@ -26,6 +26,7 @@ export default function AudioPlayer() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const mediaStreamSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const { isRecording, audioBlobUrl, startRecording, stopRecording } = useAudioRecorder();
 
@@ -115,6 +116,64 @@ export default function AudioPlayer() {
   }, [audioRef.current]); // eslint-disable-line react-hooks/exhaustive-deps // Dependency on audioRef.current to ensure audio element is available
 
   useEffect(() => {
+    if (!analyserRef.current || !audioContextRef.current) return;
+
+    if (isRecording) {
+      // Disconnect existing audio element source if connected
+      if (sourceRef.current) {
+        sourceRef.current.disconnect(analyserRef.current);
+      }
+      // Disconnect analyser from destination to prevent microphone feedback
+      if (analyserRef.current && audioContextRef.current) {
+        analyserRef.current.disconnect(audioContextRef.current.destination);
+      }
+
+      // Start recording: connect microphone
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          mediaStreamSourceRef.current = audioContextRef.current!.createMediaStreamSource(stream);
+          mediaStreamSourceRef.current.connect(analyserRef.current!);
+          // Store the stream so we can stop it later
+          mediaStreamSourceRef.current.mediaStream = stream;
+        })
+        .catch(err => {
+          console.error("Error accessing microphone:", err);
+        });
+    } else {
+      // Stop recording: reconnect audio element source
+      // Disconnect microphone source if it exists
+      if (mediaStreamSourceRef.current) {
+        mediaStreamSourceRef.current.disconnect(analyserRef.current!);
+        // Stop all tracks in the stream
+        mediaStreamSourceRef.current.mediaStream.getTracks().forEach(track => track.stop());
+        mediaStreamSourceRef.current = null;
+      }
+
+      // Reconnect audio element source if it exists and is not already connected
+      if (sourceRef.current) {
+        sourceRef.current.connect(analyserRef.current!);
+      }
+      // Reconnect analyser to destination for playback
+      if (analyserRef.current && audioContextRef.current) {
+        analyserRef.current.connect(audioContextRef.current.destination);
+      }
+    }
+
+    // Cleanup function for this useEffect
+    return () => {
+      if (mediaStreamSourceRef.current) {
+        mediaStreamSourceRef.current.disconnect(analyserRef.current!);
+        mediaStreamSourceRef.current.mediaStream.getTracks().forEach(track => track.stop());
+        mediaStreamSourceRef.current = null;
+      }
+      // Ensure audio element source is reconnected if component unmounts while not recording
+      if (!isRecording && sourceRef.current) {
+        sourceRef.current.connect(analyserRef.current!);
+      }
+    };
+  }, [isRecording, analyserRef, audioContextRef, sourceRef]); // Dependencies
+
+  useEffect(() => {
     if (!isAudioContextReady || !analyserRef.current || !canvasRef.current) {
       return;
     }
@@ -142,11 +201,15 @@ export default function AudioPlayer() {
       canvas.height = canvas.offsetHeight;
 
       ctx.lineWidth = 2;
-      // Use a gradient similar to the original design
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-      gradient.addColorStop(0, '#8A2BE2'); // Neon Purple
-      gradient.addColorStop(1, '#00FFFF'); // Neon Blue
-      ctx.strokeStyle = gradient;
+      if (isRecording) {
+        ctx.strokeStyle = '#FF0000'; // Red for recording
+      } else {
+        // Use a gradient similar to the original design
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        gradient.addColorStop(0, '#8A2BE2'); // Neon Purple
+        gradient.addColorStop(1, '#00FFFF'); // Neon Blue
+        ctx.strokeStyle = gradient;
+      }
 
       ctx.beginPath();
 
@@ -175,7 +238,7 @@ export default function AudioPlayer() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [analyserRef, canvasRef, isAudioContextReady]); // Dependencies on analyserRef, canvasRef, and isAudioContextReady
+  }, [analyserRef, canvasRef, isAudioContextReady, isRecording]); // Dependencies on analyserRef, canvasRef, isAudioContextReady, and isRecording
 
   
 
