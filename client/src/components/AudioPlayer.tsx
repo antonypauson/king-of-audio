@@ -1,22 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, Mic, Upload, Crown } from "lucide-react";
 import { mockUsers, mockCurrentGameState } from "../data/mockData";
+import { useAudioRecorder } from "../hooks/useAudioRecorder";
 
 interface CurrentPlayer {
   name: string;
   avatar: string;
   initials: string;
   reignStartTime: Date;
+  currentClipUrl: string;
 }
 
 export default function AudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reignDuration, setReignDuration] = useState("");
   const [currentPlayer, setCurrentPlayer] = useState<CurrentPlayer | null>(null);
+
+  const { isRecording, audioBlobUrl, startRecording, stopRecording } = useAudioRecorder();
 
   useEffect(() => {
     const currentUser = mockUsers.find(user => user.id === mockCurrentGameState.currentUserId);
@@ -26,6 +30,7 @@ export default function AudioPlayer() {
         avatar: currentUser.avatarUrl,
         initials: currentUser.username.substring(0, 2).toUpperCase(),
         reignStartTime: new Date(mockCurrentGameState.reignStart),
+        currentClipUrl: currentUser.currentClipUrl,
       });
     }
   }, []);
@@ -46,8 +51,40 @@ export default function AudioPlayer() {
     return () => clearInterval(interval);
   }, [currentPlayer]);
 
+  useEffect(() => {
+    if (audioBlobUrl) {
+      console.log("New audio URL:", audioBlobUrl);
+      // Simulate updating mockUsers
+      const updatedMockUsers = mockUsers.map(user => {
+        if (user.id === mockCurrentGameState.currentUserId) {
+          return { ...user, currentClipUrl: audioBlobUrl };
+        }
+        return user;
+      });
+      console.log("Simulated updated mockUsers:", updatedMockUsers);
+
+      // Update currentPlayer state with the new audioBlobUrl
+      setCurrentPlayer(prevPlayer => {
+        if (prevPlayer) {
+          return { ...prevPlayer, currentClipUrl: audioBlobUrl };
+        }
+        return null;
+      });
+    }
+  }, [audioBlobUrl]);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   const togglePlay = () => {
-    setIsPlaying(!isPlaying);
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.src = currentPlayer.currentClipUrl; // Set src to currentClipUrl
+        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+      }
+      setIsPlaying(!isPlaying);
+    }
   };
 
   if (!currentPlayer) {
@@ -55,7 +92,8 @@ export default function AudioPlayer() {
   }
 
   return (
-    <Card className="p-8 bg-gradient-player border-border shadow-card">
+    <Card className="p-8 bg-gradient-player border-border shadow-card glowing-border">
+      <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
           {/* <Crown className="h-5 w-5 text-crown animate-pulse-glow" /> */}
@@ -98,12 +136,12 @@ export default function AudioPlayer() {
         ))}
       </div>
 
-      {/* Play Controls */}
-      <div className="flex justify-center gap-4 mb-8">
+      {/* Play Controls and Record/Upload Actions */}
+      <div className="flex gap-3 justify-center mb-8">
         <Button
           size="lg"
           onClick={togglePlay}
-          className="bg-gradient-primary hover:scale-105 transition-transform shadow-glow-primary"
+          className="w-[180px] bg-gradient-primary hover:scale-105 transition-transform shadow-glow-primary"
         >
           {isPlaying ? (
             <Pause className="h-6 w-6 mr-2" />
@@ -112,25 +150,14 @@ export default function AudioPlayer() {
           )}
           {isPlaying ? "Pause" : "Play Audio"}
         </Button>
-      </div>
-
-      {/* Record/Upload Actions */}
-      <div className="flex gap-3 justify-center">
         <Button
           variant="outline"
           size="lg"
-          className="flex-1 max-w-48 border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-background transition-all duration-300 glow-primary"
+          onClick={isRecording ? stopRecording : startRecording}
+          className="w-[180px] border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-background transition-all duration-300 glow-primary"
         >
           <Mic className="h-5 w-5 mr-2" />
-          Record Audio
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          className="flex-1 max-w-48 border-neon-blue text-neon-blue hover:bg-neon-blue hover:text-background transition-all duration-300"
-        >
-          <Upload className="h-5 w-5 mr-2" />
-          Upload Audio
+          {isRecording ? "Stop Recording" : "Record Audio"}
         </Button>
       </div>
     </Card>

@@ -122,6 +122,16 @@ All colors MUST be HSL.
   .glow-primary {
     box-shadow: var(--glow-primary);
   }
+
+  .glowing-border {
+    border: 2px solid hsl(var(--neon-purple));
+    box-shadow: 0 0 15px hsl(var(--neon-purple) / 0.7), inset 0 0 15px hsl(var(--neon-purple) / 0.7);
+    transition: all 0.3s ease-in-out;
+  }
+
+  .glowing-border:hover {
+    box-shadow: 0 0 25px hsl(var(--neon-purple) / 1), inset 0 0 25px hsl(var(--neon-purple) / 1);
+  }
 }
 
 @keyframes wave {

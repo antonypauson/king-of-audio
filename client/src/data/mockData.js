@@ -91,6 +91,14 @@ export const mockActivityFeed = [
 ];
 
 // ---------------------------
+// current user? 
+// ---------------------------
+export const mockCurrentUser = {
+  id: "user_ihatebignannies"
+};
+
+
+// ---------------------------
 // Helper to format activity feed text
 // ---------------------------
 export function formatActivity(event, usersMap) {
