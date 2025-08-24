@@ -151,6 +151,21 @@ export function addActivityEvent(newEvent) {
   console.log("addActivityEvent: new feed created:", mockActivityFeed);
 }
 
+// Helper function to increment totalTimeHeld for the reigning user
+// we'll call this inside setTimeout to increment every second
+export function incrementReigningUserTotalTime() {
+  const reigningUser = findReigningUser();
+  if (reigningUser && reigningUser.currentReignStart !== null) {
+    mockUsers = mockUsers.map(user => {
+      if (user.id === reigningUser.id) {
+        return { ...user, totalTimeHeld: user.totalTimeHeld + 1 };
+      }
+      return user;
+    });
+    console.log(`User ${reigningUser.username}'s totalTimeHeld incremented.`);
+  }
+}
+
 // Helper to format activity feed text (can be moved to frontend or kept here for consistency)
 export function formatActivity(event, usersMap) {
   const secondsAgo = Math.floor((Date.now() - event.timestamp) / 1000);

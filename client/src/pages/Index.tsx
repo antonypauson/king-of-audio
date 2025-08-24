@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { io } from 'socket.io-client'; // socket.io-client
 //removed mock data import from mockData.js, cause we are gonna use backend now for intial data. 
 
 const Index = () => {
@@ -13,44 +14,48 @@ const Index = () => {
   const [currentUser, setCurrentUser] = useState(null); 
   const [isLoading, setIsLoading] = useState(true); 
 
+  const socketRef = useRef(null); // Declare socketRef
+
+  // Socket.IO connection and listeners
+  useEffect(() => {
+    socketRef.current = io('http://localhost:5000'); // Initialize socket using ref
+
+    socketRef.current.on('usersUpdated', (updatedUsers) => {
+      setUsers(updatedUsers);
+    });
+
+    socketRef.current.on('gameStateUpdated', (updatedGameState) => {
+      setCurrentGameState(updatedGameState);
+    });
+
+    socketRef.current.on('activityFeedUpdated', (updatedActivityFeed) => {
+      console.log('Frontend received activityFeedUpdated:', updatedActivityFeed);
+      setActivityFeed(updatedActivityFeed);
+    });
+
+    // Clean up socket listeners and disconnect on component unmount
+    return () => {
+      socketRef.current.off('usersUpdated');
+      socketRef.current.off('gameStateUpdated');
+      socketRef.current.off('activityFeedUpdated');
+      socketRef.current.disconnect(); // Disconnect socket when component unmounts
+    };
+  }, []); // Empty dependency array: runs once on mount, cleans up on unmount
+
+  //to add new activity card
   const handleNewActivityEvent = useCallback((newEvent: any) => {
-    setActivityFeed((prev) => [...prev, newEvent]);
-  }, [setActivityFeed]);
-
+    socketRef.current.emit('addActivity', newEvent); // Emit event to backend
+  }, []); // No longer depends on 'socket', as socketRef.current is stable
+  
+  // to set current user as new reigning palyer
   const handleUpdateUserClipAndReign = useCallback((userId: string, newClipUrl: string, newReignStart: number) => {
-    setUsers(prevUsers => {
-      const updatedUsers = prevUsers.map(user => {
-        if (user.id === userId) {
-          return { ...user, currentClipUrl: newClipUrl, currentReignStart: newReignStart };
-        }
-        return user;
-      });
-      return updatedUsers;
-    });
-    setCurrentGameState(prevState => ({
-      ...prevState,
-      currentUserId: userId,
-      currentClipUrl: newClipUrl,
-      reignStart: newReignStart,
-    }));
-  }, []);
+    socketRef.current.emit('updateUserClipAndReign', { userId, newClipUrl, newReignStart }); // Emit event to backend
+  }, []); // No longer depends on 'socket', as socketRef.current is stable
 
+  // to update the dethroned player's time in 'users'
   const handleDethroneUser = useCallback((userId: string) => {
-    setUsers(prevUsers => {
-      const updatedUsers = prevUsers.map(user => {
-        if (user.id === userId && user.currentReignStart !== null) {
-          const reignDuration = Date.now() - user.currentReignStart;
-          return {
-            ...user,
-            totalTimeHeld: user.totalTimeHeld + Math.floor(reignDuration / 1000),
-            currentReignStart: null
-          };
-        }
-        return user;
-      });
-      return updatedUsers;
-    });
-  }, []);
+    socketRef.current.emit('dethroneUser', { userId }); // Emit event to backend
+  }, []); // No longer depends on 'socket', as socketRef.current is stable
 
   const handleFindReigningUser = useCallback(() => {
     return users.find(user => user.currentReignStart !== null);
@@ -92,34 +97,7 @@ const Index = () => {
     fetchData();
   }, []); // Empty dependency array means this runs once on mount
 
-  // Effect to update totalTimeHeld for the reigning player dynamically
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    const reigningUser = users.find(user => user.id === currentGameState?.currentUserId); // Use optional chaining
-
-    if (reigningUser && reigningUser.currentReignStart !== null) {
-      intervalId = setInterval(() => {
-        setUsers(prevUsers => {
-          return prevUsers.map(user => {
-            if (user.id === reigningUser.id) {
-              // Calculate elapsed time since reign started
-              const elapsedSeconds = Math.floor((Date.now() - reigningUser.currentReignStart!) / 1000);
-              // Add to totalTimeHeld, ensuring we don't double count if already updated
-              // This approach ensures totalTimeHeld is always accurate based on current reign start
-              return { ...user, totalTimeHeld: user.totalTimeHeld + 1 }; // Increment by 1 second
-            }
-            return user;
-          });
-        });
-      }, 1000); // Update every second
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [users, currentGameState]); // Dependencies: re-run if users or currentGameState changes
+  
 
   return (
     <div className="min-h-screen bg-background">
