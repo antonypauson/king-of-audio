@@ -97,7 +97,7 @@ export const mockCurrentGameState = {
 };
 
 // ---------------------------
-// Activity Feedv (initial, cause we will be mutating it but not directly)
+// Activity Feed(initial, cause we will be mutating it but not directly)
 // ---------------------------
 export const initialMockActivityFeed = [ 
   {

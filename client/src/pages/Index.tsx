@@ -3,12 +3,15 @@ import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { initialMockActivityFeed, mockUsers, mockCurrentGameState, dethroneUser, updateMockUserClipAndReign, findReigningUser, mockCurrentUser } from "../data/mockData";
+//removed mock data import from mockData.js, cause we are gonna use backend now for intial data. 
 
 const Index = () => {
-  const [activityFeed, setActivityFeed] = useState(initialMockActivityFeed);
-  const [users, setUsers] = useState(mockUsers);
-  const [currentGameState, setCurrentGameState] = useState(mockCurrentGameState);
+  //intially all these states are empty, as we are fetching it from backend endpoints
+  const [activityFeed, setActivityFeed] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [currentGameState, setCurrentGameState] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); 
+  const [isLoading, setIsLoading] = useState(true); 
 
   const handleNewActivityEvent = useCallback((newEvent: any) => {
     setActivityFeed((prev) => [...prev, newEvent]);
@@ -53,12 +56,46 @@ const Index = () => {
     return users.find(user => user.currentReignStart !== null);
   }, [users]);
 
-  const currentUserData = users.find(user => user.id === mockCurrentUser.id);
+  //current user's info from our 'user' array extraction
+  const currentUserData = users.find(user => user.id === currentUser?.id);
+
+  // fetching initial mock data from the backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try { //these states were null intially
+        const [usersRes, gameStateRes, activityFeedRes, currentUserRes] = await Promise.all([
+          fetch('http://localhost:5000/api/users'),
+          fetch('http://localhost:5000/api/current-game-state'),
+          fetch('http://localhost:5000/api/activity-feed'),
+          fetch('http://localhost:5000/api/current-user'), //all the links for the back end fetching. Now we have the mock data. 
+        ]);
+
+        const [usersData, gameStateData, activityFeedData, currentUserData] = await Promise.all([
+          usersRes.json(),
+          gameStateRes.json(),
+          activityFeedRes.json(),
+          currentUserRes.json(),
+        ]);
+
+        setUsers(usersData);
+        setCurrentGameState(gameStateData);
+        setActivityFeed(activityFeedData);
+        setCurrentUser(currentUserData);
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        // Handle error state appropriately
+      } finally {
+        setIsLoading(false); //when we fetched all data, isLoading is false
+      }
+    };
+
+    fetchData();
+  }, []); // Empty dependency array means this runs once on mount
 
   // Effect to update totalTimeHeld for the reigning player dynamically
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-    const reigningUser = users.find(user => user.id === currentGameState.currentUserId);
+    const reigningUser = users.find(user => user.id === currentGameState?.currentUserId); // Use optional chaining
 
     if (reigningUser && reigningUser.currentReignStart !== null) {
       intervalId = setInterval(() => {
@@ -117,37 +154,42 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[calc(100vh-120px)]">
-          {/* Left Sidebar - Activity Feed */}
-          <aside className="lg:col-span-1">
-            <div className="sticky top-32">
-              <ActivityFeed activityFeed={activityFeed} />
-            </div>
-          </aside>
-
-          {/* Center - Audio Player */}
-          <section className="lg:col-span-2">
-            <AudioPlayer
-              onNewActivityEvent={handleNewActivityEvent}
-              updateUserClipAndReign={handleUpdateUserClipAndReign}
-              dethroneUser={handleDethroneUser}
-              findReigningUser={handleFindReigningUser}
-              currentUser={mockCurrentUser}
-              currentGameState={currentGameState}
-              users={users}
-            />
-          </section>
-
-          {/* Right Sidebar - Leaderboard */}
-          <aside className="lg:col-span-1">
-            <div className="sticky top-32">
-              <Leaderboard users={users} />
-            </div>
-          </aside>
+      {isLoading ? ( // loading message/animation
+        <div className="flex justify-center items-center min-h-[calc(100vh-80px)] text-lg text-muted-foreground">
+          Loading data... need to add skeleton or loading animation here
         </div>
-      </main>
+      ) : (
+        <main className="container mx-auto px-6 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[calc(100vh-120px)]">
+            {/* Left Sidebar - Activity Feed */}
+            <aside className="lg:col-span-1">
+              <div className="sticky top-32">
+                <ActivityFeed activityFeed={activityFeed} />
+              </div>
+            </aside>
+
+            {/* Center - Audio Player */}
+            <section className="lg:col-span-2">
+              <AudioPlayer //all the props inside AudioPlayer
+                onNewActivityEvent={handleNewActivityEvent}
+                updateUserClipAndReign={handleUpdateUserClipAndReign}
+                dethroneUser={handleDethroneUser}
+                findReigningUser={handleFindReigningUser}
+                currentUser={currentUser}
+                currentGameState={currentGameState}
+                users={users}
+              />
+            </section>
+
+            {/* Right Sidebar - Leaderboard */}
+            <aside className="lg:col-span-1">
+              <div className="sticky top-32">
+                <Leaderboard users={users} />
+              </div>
+            </aside>
+          </div>
+        </main>
+      )}
     </div>
   );
 };
