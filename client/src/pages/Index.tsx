@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initialMockActivityFeed, mockUsers, mockCurrentGameState, dethroneUser, updateMockUserClipAndReign, findReigningUser, mockCurrentUser } from "../data/mockData";
 
 const Index = () => {
@@ -52,6 +53,8 @@ const Index = () => {
     return users.find(user => user.currentReignStart !== null);
   }, [users]);
 
+  const currentUserData = users.find(user => user.id === mockCurrentUser.id);
+
   // Effect to update totalTimeHeld for the reigning player dynamically
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -96,9 +99,19 @@ const Index = () => {
               </h1>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                The ultimate audio battle arena
-              </span>
+              {currentUserData && (
+                <div className="flex items-center gap-3 border border-primary rounded-sm px-3 py-1">
+                  <Avatar className="h-8 w-8 border-2 border-primary">
+                    <AvatarImage src={currentUserData.avatarUrl} />
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                      {currentUserData.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-base font-medium text-foreground">
+                    {currentUserData.username}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

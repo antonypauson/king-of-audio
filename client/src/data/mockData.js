@@ -164,7 +164,7 @@ export function addTakeoverAndDethronedEvents(currentFeed, dethronedUserId, newR
 // current user?
 // ---------------------------
 export const mockCurrentUser = {
-  id: "user_your_mom",
+  id: "user_joe_dane",
 };
 
 
