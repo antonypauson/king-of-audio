@@ -1,16 +1,56 @@
-import { useState, useCallback } from "react"; // Added useCallback
+import { useState, useCallback } from "react";
 import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
-import { initialMockActivityFeed } from "../data/mockData"; // Added
+import { initialMockActivityFeed, mockUsers, mockCurrentGameState, dethroneUser, updateMockUserClipAndReign, findReigningUser, mockCurrentUser } from "../data/mockData";
 
 const Index = () => {
   const [activityFeed, setActivityFeed] = useState(initialMockActivityFeed);
+  const [users, setUsers] = useState(mockUsers);
+  const [currentGameState, setCurrentGameState] = useState(mockCurrentGameState);
 
-  // Function to handle new activity events from children
   const handleNewActivityEvent = useCallback((newEvent: any) => {
     setActivityFeed((prev) => [...prev, newEvent]);
-  }, [setActivityFeed]); // Dependency array for useCallback
+  }, [setActivityFeed]);
+
+  const handleUpdateUserClipAndReign = useCallback((userId: string, newClipUrl: string, newReignStart: number) => {
+    setUsers(prevUsers => {
+      const updatedUsers = prevUsers.map(user => {
+        if (user.id === userId) {
+          return { ...user, currentClipUrl: newClipUrl, currentReignStart: newReignStart };
+        }
+        return user;
+      });
+      return updatedUsers;
+    });
+    setCurrentGameState(prevState => ({
+      ...prevState,
+      currentUserId: userId,
+      currentClipUrl: newClipUrl,
+      reignStart: newReignStart,
+    }));
+  }, []);
+
+  const handleDethroneUser = useCallback((userId: string) => {
+    setUsers(prevUsers => {
+      const updatedUsers = prevUsers.map(user => {
+        if (user.id === userId && user.currentReignStart !== null) {
+          const reignDuration = Date.now() - user.currentReignStart;
+          return {
+            ...user,
+            totalTimeHeld: user.totalTimeHeld + Math.floor(reignDuration / 1000),
+            currentReignStart: null
+          };
+        }
+        return user;
+      });
+      return updatedUsers;
+    });
+  }, []);
+
+  const handleFindReigningUser = useCallback(() => {
+    return users.find(user => user.currentReignStart !== null);
+  }, [users]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,19 +81,27 @@ const Index = () => {
           {/* Left Sidebar - Activity Feed */}
           <aside className="lg:col-span-1">
             <div className="sticky top-32">
-              <ActivityFeed activityFeed={activityFeed} /> {/* Passed prop */}
+              <ActivityFeed activityFeed={activityFeed} />
             </div>
           </aside>
 
           {/* Center - Audio Player */}
           <section className="lg:col-span-2">
-            <AudioPlayer onNewActivityEvent={handleNewActivityEvent} /> {/* Passed prop */}
+            <AudioPlayer
+              onNewActivityEvent={handleNewActivityEvent}
+              updateUserClipAndReign={handleUpdateUserClipAndReign}
+              dethroneUser={handleDethroneUser}
+              findReigningUser={handleFindReigningUser}
+              currentUser={mockCurrentUser}
+              currentGameState={currentGameState}
+              users={users}
+            />
           </section>
 
           {/* Right Sidebar - Leaderboard */}
           <aside className="lg:col-span-1">
             <div className="sticky top-32">
-              <Leaderboard />
+              <Leaderboard users={users} />
             </div>
           </aside>
         </div>

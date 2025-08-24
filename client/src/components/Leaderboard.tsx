@@ -4,7 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Crown, Trophy, Medal, Star } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 
-import { mockUsers } from "@/data/mockData";
+interface User {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  totalTimeHeld: number;
+  currentReignStart: number | null;
+}
 
 interface Player {
   id: string;
@@ -14,17 +20,6 @@ interface Player {
   isCurrentReigning: boolean;
   rank: number;
 }
-
-const players: Player[] = mockUsers
-  .sort((a, b) => b.totalTimeHeld - a.totalTimeHeld)
-  .map((user, index) => ({
-    id: user.id,
-    name: user.username,
-    avatarUrl: user.avatarUrl,
-    totalTimeHeld: user.totalTimeHeld,
-    isCurrentReigning: user.currentReignStart !== null,
-    rank: index + 1,
-  }));
 
 const getRankIcon = (rank: number) => {
   switch (rank) {
@@ -49,7 +44,18 @@ const getRankStyle = (rank: number, isCurrentReigning: boolean) => {
   return "bg-card border-border hover:bg-secondary/50";
 };
 
-export default function Leaderboard() {
+export default function Leaderboard({ users }: { users: User[] }) {
+  const players: Player[] = users
+    .sort((a, b) => b.totalTimeHeld - a.totalTimeHeld)
+    .map((user, index) => ({
+      id: user.id,
+      name: user.username,
+      avatarUrl: user.avatarUrl,
+      totalTimeHeld: user.totalTimeHeld,
+      isCurrentReigning: user.currentReignStart !== null,
+      rank: index + 1,
+    }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-6">

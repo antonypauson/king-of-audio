@@ -4,8 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, Mic, Upload, Crown } from "lucide-react";
-import { mockUsers, mockCurrentGameState, mockCurrentUser, updateMockUserClipAndReign, addMockActivityEvent, findReigningUser, dethroneUser, addTakeoverAndDethronedEvents } from "../data/mockData";
 import { useAudioRecorder } from "../hooks/useAudioRecorder";
+
+interface User {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  totalTimeHeld: number;
+  currentClipUrl: string;
+  currentReignStart: number | null;
+}
+
+interface GameState {
+  currentUserId: string;
+  currentClipUrl: string;
+  reignStart: number;
+}
 
 interface CurrentPlayer {
   name: string;
@@ -15,7 +29,25 @@ interface CurrentPlayer {
   currentClipUrl: string;
 }
 
-export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent: (event: any) => void }) {
+interface AudioPlayerProps {
+  onNewActivityEvent: (event: any) => void;
+  updateUserClipAndReign: (userId: string, newClipUrl: string, newReignStart: number) => void;
+  dethroneUser: (userId: string) => void;
+  findReigningUser: () => User | undefined;
+  currentUser: User;
+  currentGameState: GameState;
+  users: User[];
+}
+
+export default function AudioPlayer({
+  onNewActivityEvent,
+  updateUserClipAndReign,
+  dethroneUser,
+  findReigningUser,
+  currentUser,
+  currentGameState,
+  users,
+}: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reignDuration, setReignDuration] = useState("");
   const [reigningPlayer, setReigningPlayer] = useState<CurrentPlayer | null>(null);
@@ -31,17 +63,17 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
   const { isRecording, audioBlobUrl, startRecording, stopRecording } = useAudioRecorder();
 
   useEffect(() => {
-    const currentUser = mockUsers.find(user => user.id === mockCurrentGameState.currentUserId);
-    if (currentUser) {
+    const reigningUser = users.find(user => user.id === currentGameState.currentUserId);
+    if (reigningUser) {
       setReigningPlayer({
-        name: currentUser.username,
-        avatar: currentUser.avatarUrl,
-        initials: currentUser.username.substring(0, 2).toUpperCase(),
-        reignStartTime: new Date(mockCurrentGameState.reignStart),
-        currentClipUrl: currentUser.currentClipUrl,
+        name: reigningUser.username,
+        avatar: reigningUser.avatarUrl,
+        initials: reigningUser.username.substring(0, 2).toUpperCase(),
+        reignStartTime: new Date(currentGameState.reignStart),
+        currentClipUrl: reigningUser.currentClipUrl,
       });
     }
-  }, []);
+  }, [currentGameState, users]);
 
   useEffect(() => {
     if (!reigningPlayer) return;
@@ -59,55 +91,49 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
     return () => clearInterval(interval);
   }, [reigningPlayer]);
 
+  const processedAudioBlobUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (audioBlobUrl) {
-      // Check if the current user is already reigning
-      const isCurrentUserReigning = mockCurrentGameState.currentUserId === mockCurrentUser.id;
+    if (audioBlobUrl && audioBlobUrl !== processedAudioBlobUrlRef.current) {
+      processedAudioBlobUrlRef.current = audioBlobUrl;
+      const isCurrentUserReigning = currentGameState.currentUserId === currentUser.id;
 
       let dethronedUser = null;
       if (!isCurrentUserReigning) {
-        // Find the currently reigning player
-        const reigningPlayerInMockData = findReigningUser();
+        const reigningPlayerInState = findReigningUser();
 
-        if (reigningPlayerInMockData) {
-          dethronedUser = reigningPlayerInMockData;
-          // Dethrone the current reigning player
-          dethroneUser(reigningPlayerInMockData.id);
+        if (reigningPlayerInState) {
+          dethronedUser = reigningPlayerInState;
+          dethroneUser(reigningPlayerInState.id);
         }
       }
 
-      // Update mockUsers with the new clip URL and reign start time, and update mockCurrentGameState
-      updateMockUserClipAndReign(mockCurrentUser.id, audioBlobUrl, Date.now());
+      updateUserClipAndReign(currentUser.id, audioBlobUrl, Date.now());
 
-      // Add activity events
       let newActivityEvents = [];
       if (dethronedUser) {
-        // If someone was dethroned, add only the dethroned event
         const now = Date.now();
         newActivityEvents.push({
           id: `event_${now}_dethroned`,
           type: "dethroned",
-          userId: mockCurrentUser.id, // The new reigning user is the one who dethroned
+          userId: currentUser.id,
           targetUserId: dethronedUser.id,
           timestamp: now,
         });
       } else {
-        // If no one was dethroned (e.g., first audio or current user was already reigning), just an upload event
         newActivityEvents.push({
           id: `event_${Date.now()}`,
           type: "upload",
-          userId: mockCurrentUser.id,
+          userId: currentUser.id,
           timestamp: Date.now(),
         });
       }
 
-      // Call the prop function to update activity feed in parent for each new event
       newActivityEvents.forEach(event => {
         onNewActivityEvent(event);
         console.log(`Added new '${event.type}' event to mockActivityFeed via prop.`);
       });
 
-      // Update reigningPlayer state with the new audioBlobUrl
       setReigningPlayer(prevPlayer => {
         if (prevPlayer) {
           return { ...prevPlayer, currentClipUrl: audioBlobUrl };
@@ -115,8 +141,6 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
         return null;
       });
 
-      // If we are in a playing state and audioBlobUrl just updated (meaning a recording just finished)
-      // then play the newly recorded audio.
       if (isPlaying && audioRef.current) {
         audioRef.current.src = audioBlobUrl;
         audioRef.current.onloadeddata = () => {
@@ -124,7 +148,7 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
         };
       }
     }
-  }, [audioBlobUrl, onNewActivityEvent]);
+  }, [audioBlobUrl, onNewActivityEvent, currentUser, currentGameState, dethroneUser, findReigningUser, updateUserClipAndReign, isPlaying]);
 
   useEffect(() => {
     // Initialize AudioContext and source node only once
@@ -214,13 +238,7 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
   }, [isRecording, analyserRef, audioContextRef, sourceRef]); // Dependencies
 
   useEffect(() => {
-    console.log("Waveform useEffect running.");
-    console.log("isAudioContextReady:", isAudioContextReady);
-    console.log("analyserRef.current:", analyserRef.current);
-    console.log("canvasRef.current:", canvasRef.current);
-
     if (!isAudioContextReady || !analyserRef.current || !canvasRef.current) {
-      console.log("Waveform useEffect: Missing dependencies, returning.");
       return;
     }
 
