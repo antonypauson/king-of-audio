@@ -48,7 +48,7 @@ export let mockUsers = [
   },
 ];
 
-// Helper function to update a user's clip URL and reign start
+// Helper function to update a user's clip URL and reign start, and update game state
 export function updateMockUserClipAndReign(userId, newClipUrl, newReignStart) {
   mockUsers = mockUsers.map(user => {
     if (user.id === userId) {
@@ -56,7 +56,35 @@ export function updateMockUserClipAndReign(userId, newClipUrl, newReignStart) {
     }
     return user;
   });
+  
+  // Update mockCurrentGameState
+  mockCurrentGameState.currentUserId = userId;
+  mockCurrentGameState.currentClipUrl = newClipUrl;
+  mockCurrentGameState.reignStart = newReignStart;
+
   console.log("mockUsers updated:", mockUsers); // Log for verification
+  console.log("mockCurrentGameState updated:", mockCurrentGameState); // Log for verification
+}
+
+// currently reigning user
+export function findReigningUser() {
+  return mockUsers.find(user => user.currentReignStart !== null);
+}
+
+// dethrone a user and update their totalTimeHeld
+export function dethroneUser(userId) {
+  mockUsers = mockUsers.map(user => {
+    if (user.id === userId && user.currentReignStart !== null) {
+      const reignDuration = Date.now() - user.currentReignStart;
+      return { 
+        ...user, 
+        totalTimeHeld: user.totalTimeHeld + Math.floor(reignDuration / 1000), // Add duration in seconds
+        currentReignStart: null 
+      };
+    }
+    return user;
+  });
+  console.log(`User ${userId} dethroned. mockUsers updated:`, mockUsers);
 }
 
 // ---------------------------
@@ -108,11 +136,35 @@ export function addMockActivityEvent(currentFeed, newEvent) {
   return updatedFeed;
 }
 
+// add takeover and dethroned events
+export function addTakeoverAndDethronedEvents(currentFeed, dethronedUserId, newReigningUserId) {
+  const now = Date.now();
+  const takeoverEvent = {
+    id: `event_${now}_takeover`,
+    type: "takeover",
+    userId: newReigningUserId,
+    targetUserId: dethronedUserId,
+    timestamp: now,
+  };
+  const dethronedEvent = {
+    id: `event_${now}_dethroned`,
+    type: "dethroned",
+    userId: newReigningUserId, // The new reigning user is the one who dethroned
+    targetUserId: dethronedUserId,
+    timestamp: now,
+  };
+
+  let updatedFeed = [...currentFeed, takeoverEvent];
+  updatedFeed = [...updatedFeed, dethronedEvent];
+  console.log("addTakeoverAndDethronedEvents: new feed created:", updatedFeed);
+  return updatedFeed;
+}
+
 // ---------------------------
 // current user?
 // ---------------------------
 export const mockCurrentUser = {
-  id: "user_mike_the_mic"
+  id: "user_lina_rocks"
 };
 
 

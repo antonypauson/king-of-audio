@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, Mic, Upload, Crown } from "lucide-react";
-import { mockUsers, mockCurrentGameState, mockCurrentUser, updateMockUserClipAndReign, addMockActivityEvent } from "../data/mockData";
+import { mockUsers, mockCurrentGameState, mockCurrentUser, updateMockUserClipAndReign, addMockActivityEvent, findReigningUser, dethroneUser, addTakeoverAndDethronedEvents } from "../data/mockData";
 import { useAudioRecorder } from "../hooks/useAudioRecorder";
 
 interface CurrentPlayer {
@@ -61,19 +61,51 @@ export default function AudioPlayer({ onNewActivityEvent }: { onNewActivityEvent
 
   useEffect(() => {
     if (audioBlobUrl) {
-      // Update mockUsers with the new clip URL and reign start time
+      // Check if the current user is already reigning
+      const isCurrentUserReigning = mockCurrentGameState.currentUserId === mockCurrentUser.id;
+
+      let dethronedUser = null;
+      if (!isCurrentUserReigning) {
+        // Find the currently reigning player
+        const reigningPlayerInMockData = findReigningUser();
+
+        if (reigningPlayerInMockData) {
+          dethronedUser = reigningPlayerInMockData;
+          // Dethrone the current reigning player
+          dethroneUser(reigningPlayerInMockData.id);
+        }
+      }
+
+      // Update mockUsers with the new clip URL and reign start time, and update mockCurrentGameState
       updateMockUserClipAndReign(mockCurrentUser.id, audioBlobUrl, Date.now());
 
-      const newEvent = {
-        id: `event_${Date.now()}`, // Unique ID for the event
-        type: "upload",
-        userId: mockCurrentUser.id,
-        timestamp: Date.now(),
-      };
-      // Call the prop function to update activity feed in parent
-      onNewActivityEvent(newEvent);
-      console.log("Added new 'upload' event to mockActivityFeed via prop.");
+      // Add activity events
+      let newActivityEvents = [];
+      if (dethronedUser) {
+        // If someone was dethroned, add only the dethroned event
+        const now = Date.now();
+        newActivityEvents.push({
+          id: `event_${now}_dethroned`,
+          type: "dethroned",
+          userId: mockCurrentUser.id, // The new reigning user is the one who dethroned
+          targetUserId: dethronedUser.id,
+          timestamp: now,
+        });
+      } else {
+        // If no one was dethroned (e.g., first audio or current user was already reigning), just an upload event
+        newActivityEvents.push({
+          id: `event_${Date.now()}`,
+          type: "upload",
+          userId: mockCurrentUser.id,
+          timestamp: Date.now(),
+        });
+      }
 
+      // Call the prop function to update activity feed in parent for each new event
+      newActivityEvents.forEach(event => {
+        onNewActivityEvent(event);
+        console.log(`Added new '${event.type}' event to mockActivityFeed via prop.`);
+      });
 
       // Update reigningPlayer state with the new audioBlobUrl
       setReigningPlayer(prevPlayer => {
