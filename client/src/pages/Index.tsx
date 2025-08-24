@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -51,6 +51,35 @@ const Index = () => {
   const handleFindReigningUser = useCallback(() => {
     return users.find(user => user.currentReignStart !== null);
   }, [users]);
+
+  // Effect to update totalTimeHeld for the reigning player dynamically
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    const reigningUser = users.find(user => user.id === currentGameState.currentUserId);
+
+    if (reigningUser && reigningUser.currentReignStart !== null) {
+      intervalId = setInterval(() => {
+        setUsers(prevUsers => {
+          return prevUsers.map(user => {
+            if (user.id === reigningUser.id) {
+              // Calculate elapsed time since reign started
+              const elapsedSeconds = Math.floor((Date.now() - reigningUser.currentReignStart!) / 1000);
+              // Add to totalTimeHeld, ensuring we don't double count if already updated
+              // This approach ensures totalTimeHeld is always accurate based on current reign start
+              return { ...user, totalTimeHeld: user.totalTimeHeld + 1 }; // Increment by 1 second
+            }
+            return user;
+          });
+        });
+      }, 1000); // Update every second
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [users, currentGameState]); // Dependencies: re-run if users or currentGameState changes
 
   return (
     <div className="min-h-screen bg-background">
