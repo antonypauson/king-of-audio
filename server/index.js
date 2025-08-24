@@ -6,7 +6,12 @@ import { mockUsers, mockCurrentGameState, mockActivityFeed, mockCurrentUser, upd
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:8080", // socket server intialize
+        methods: ["GET", "POST"]
+    }
+});
 
 const PORT = process.env.PORT || 5000;
 
@@ -38,9 +43,15 @@ app.get('/api/current-user', (req, res) => {
     res.json(mockCurrentUser);
 });
 
-// Socket.IO setup
+// SOCKET IO SET UP
 io.on('connection', (socket) => {
     console.log('A user connected');
+
+    socket.on('addActivity', (event) => {
+        console.log('Processing addActivity event:', event);
+        addActivityEvent(event); // Update the mockActivityFeed on the server
+        io.emit('activityFeedUpdated', mockActivityFeed); // Broadcast updated feed to all clients
+    });
 
     socket.on('disconnect', () => {
         console.log('User disconnected');
