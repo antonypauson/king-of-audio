@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Mic, Timer, Trophy, XCircle, Swords } from "lucide-react";
 
-import { usersMap, formatActivity } from "@/data/mockData"; // Removed mockActivityFeed
+import { usersMap, formatActivity } from "@/data/mockData"; 
 
 interface ActivityEvent {
   id: string;

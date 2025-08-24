@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Trophy, Medal, Skull} from "lucide-react";
 import { formatTime } from "@/lib/utils";
+import { Flipper, Flipped } from 'react-flip-toolkit';
 
 interface User {
   id: string;
@@ -67,45 +68,48 @@ export default function Leaderboard({ users }: { users: User[] }) {
         </h2>
       </div>
       
-      <div className="space-y-2">
-        {players.map((player) => (
-          <Card 
-            key={player.id} 
-            className={`p-3 transition-all duration-300 ${getRankStyle(player.rank, player.isCurrentReigning)}`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 min-w-[2rem]">
-                {getRankIcon(player.rank, player.isCurrentReigning)}
-                <span className="text-sm font-bold text-muted-foreground">
-                  {player.rank}
-                </span>
-              </div>
-              
-              <Avatar className={`h-10 w-10 ${player.isCurrentReigning ? 'border-2 border-crown animate-reign-pulse' : ''}`}>
-                <AvatarImage src={player.avatarUrl} />
-              </Avatar>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-foreground truncate mb-0.5">
-                    {player.name}
-                  </span>
-                  
+      <Flipper flipKey={JSON.stringify(users.map(u => u.id + '-' + u.totalTimeHeld))} spring="gentle" staggerConfig={{ default: { speed: 0.9 } }}>
+        <div className="space-y-2">
+          {players.map((player) => (
+            <Flipped key={player.id} flipId={player.id} shouldFlip={() => true}>
+              <Card
+                className={`p-3 transition-all duration-300 ${getRankStyle(player.rank, player.isCurrentReigning)}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 min-w-[2rem]">
+                    {getRankIcon(player.rank, player.isCurrentReigning)}
+                    <span className="text-sm font-bold text-muted-foreground">
+                      {player.rank}
+                    </span>
+                  </div>
+
+                  <Avatar className={`h-10 w-10 ${player.isCurrentReigning ? 'border-2 border-crown animate-reign-pulse' : ''}`}>
+                    <AvatarImage src={player.avatarUrl} />
+                  </Avatar>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-foreground truncate mb-0.5">
+                        {player.name}
+                      </span>
+
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <Badge
+                      variant="secondary"
+                      className={player.rank === 1 ? "bg-crown text-background" : ""}
+                    >
+                      {formatTime(player.totalTimeHeld)}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="text-right">
-                <Badge 
-                  variant="secondary"
-                  className={player.rank === 1 ? "bg-crown text-background" : ""}
-                >
-                  {formatTime(player.totalTimeHeld)}
-                </Badge>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+              </Card>
+            </Flipped>
+          ))}
+        </div>
+      </Flipper>
     </div>
   );
 }
