@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Trophy, Medal, Star } from "lucide-react";
+import { Crown, Trophy, Medal, Skull} from "lucide-react";
 import { formatTime } from "@/lib/utils";
 
 interface User {
@@ -21,16 +21,18 @@ interface Player {
   rank: number;
 }
 
-const getRankIcon = (rank: number) => {
+const getRankIcon = (rank: number, isCurrentReigning: boolean) => {
+  if (isCurrentReigning) {
+    return <Crown className="h-5 w-5 text-crown" />;
+  }
   switch (rank) {
     case 1:
-      return <Crown className="h-5 w-5 text-crown" />;
-    case 2:
-      return <Medal className="h-5 w-5 text-muted-foreground" />;
-    case 3:
       return <Trophy className="h-5 w-5 text-orange-500" />;
+    case 2:
+    case 3:
+      return <Medal className="h-5 w-5 text-muted-foreground" />;
     default:
-      return <Star className="h-4 w-4 text-muted-foreground" />;
+      return <Skull className="h-6 w-6 text-muted-foreground" />; // Skull for others (increased size)
   }
 };
 
@@ -73,7 +75,7 @@ export default function Leaderboard({ users }: { users: User[] }) {
           >
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 min-w-[2rem]">
-                {getRankIcon(player.rank)}
+                {getRankIcon(player.rank, player.isCurrentReigning)}
                 <span className="text-sm font-bold text-muted-foreground">
                   {player.rank}
                 </span>
@@ -84,15 +86,11 @@ export default function Leaderboard({ users }: { users: User[] }) {
               </Avatar>
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-foreground truncate">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-foreground truncate mb-0.5">
                     {player.name}
                   </span>
-                  {player.isCurrentReigning && (
-                    <Badge className="bg-gradient-primary text-primary-foreground text-xs">
-                      REIGNING
-                    </Badge>
-                  )}
+                  
                 </div>
               </div>
               
