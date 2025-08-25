@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; 
-import { mockUsers, mockCurrentGameState, mockActivityFeed, mockCurrentUser, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime } from './data.js'; //importing all the mockData and helper functions
+import { mockUsers, mockCurrentGameState, mockActivityFeed, mockCurrentUser, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique } from './data.js'; //importing all the mockData and helper functions
 
 const app = express();
 const server = createServer(app);
@@ -41,6 +41,15 @@ app.get('/api/activity-feed', (req, res) => {
 
 app.get('/api/current-user', (req, res) => {
     res.json(mockCurrentUser);
+});
+
+app.get('/api/check-username-uniqueness', (req, res) => {
+    const { username } = req.query;
+    if (!username) {
+        return res.status(400).json({ error: 'Username parameter is required.' });
+    }
+    const unique = isUsernameUnique(username);
+    res.json({ isUnique: unique });
 });
 
 // update the totalTimeHeld for current reigning user, second by second

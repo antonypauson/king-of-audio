@@ -200,6 +200,13 @@ export function formatActivity(event, usersMap) {
   }
 }
 
+// Helper function to check if a username is unique (case-insensitive)
+// we are asking for username after signing in only, an initial front end check is there in client side
+export function isUsernameUnique(usernameToCheck) {
+  const lowerCaseUsernameToCheck = usernameToCheck.toLowerCase();
+  return !mockUsers.some(user => user.username.toLowerCase() === lowerCaseUsernameToCheck);
+}
+
 // Example usersMap for easy lookup (can be generated dynamically or kept here)
 export const usersMap = mockUsers.reduce((acc, user) => {
   acc[user.id] = user;

@@ -37,10 +37,9 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  if (loading) {
-    return <div>Loading authentication...</div>; // Or a loading spinner
-  }
-
+  // Removed global loading message, Auth component handles its own loading.
+  // const handleLoginSuccess is no longer directly used for setting isAuthenticated,
+  // as onAuthStateChanged handles the state changes.
   const handleLoginSuccess = () => {
     // This function is called from Auth.tsx.
     // If a user signs in, we need to re-check their auth state to see if they are verified.

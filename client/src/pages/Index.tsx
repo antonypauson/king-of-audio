@@ -4,6 +4,8 @@ import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { io } from 'socket.io-client'; // socket.io-client
+import UsernameModal from '@/components/UsernameModal'; // Import UsernameModal
+import { auth } from '../firebase'; // Import auth from firebase.ts
 //removed mock data import from mockData.js, cause we are gonna use backend now for intial data. 
 
 const Index = () => {
@@ -13,6 +15,7 @@ const Index = () => {
   const [currentGameState, setCurrentGameState] = useState(null);
   const [currentUser, setCurrentUser] = useState(null); 
   const [isLoading, setIsLoading] = useState(true); 
+  const [showUsernameModal, setShowUsernameModal] = useState(false); // New state for modal visibility 
 
   const socketRef = useRef(null); // Declare socketRef
 
@@ -86,6 +89,12 @@ const Index = () => {
         setCurrentGameState(gameStateData);
         setActivityFeed(activityFeedData);
         setCurrentUser(currentUserData);
+
+        // Check if Firebase user has a display name
+        if (auth.currentUser && !auth.currentUser.displayName) {
+          setShowUsernameModal(true);
+        }
+
       } catch (error) {
         console.error("Error fetching initial data:", error);
         // Handle error state appropriately
@@ -97,12 +106,17 @@ const Index = () => {
     fetchData();
   }, []); // Empty dependency array means this runs once on mount
 
-  
+  const handleUsernameSet = () => {
+    setShowUsernameModal(false);
+    // Force a re-render or re-check of the user's display name
+    // A simple way is to update the currentUser state, which will trigger a re-render
+    setCurrentUser({ ...auth.currentUser, displayName: auth.currentUser.displayName });
+  };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <header className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 ${showUsernameModal ? 'blur-sm' : ''}`}>
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -137,7 +151,7 @@ const Index = () => {
           Loading data... need to add skeleton or loading animation here
         </div>
       ) : (
-        <main className="container mx-auto px-6 py-8">
+        <main className={`container mx-auto px-6 py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[calc(100vh-120px)]">
             {/* Left Sidebar - Activity Feed */}
             <aside className="lg:col-span-1">
@@ -167,6 +181,10 @@ const Index = () => {
             </aside>
           </div>
         </main>
+      )}
+
+      {showUsernameModal && auth.currentUser && (
+        <UsernameModal user={auth.currentUser} onUsernameSet={handleUsernameSet} />
       )}
     </div>
   );
