@@ -8,7 +8,11 @@ import UsernameModal from '@/components/UsernameModal'; // Import UsernameModal
 import { auth } from '../firebase'; // Import auth from firebase.ts
 //removed mock data import from mockData.js, cause we are gonna use backend now for intial data. 
 
-const Index = () => {
+interface IndexProps {
+  onDataLoaded: () => void; // New prop to signal App.tsx
+}
+
+const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
   //intially all these states are empty, as we are fetching it from backend endpoints
   const [activityFeed, setActivityFeed] = useState([]);
   const [users, setUsers] = useState([]);
@@ -100,6 +104,7 @@ const Index = () => {
         // Handle error state appropriately
       } finally {
         setIsLoading(false); //when we fetched all data, isLoading is false
+        onDataLoaded(); // Signal App.tsx that data is loaded so that we can control the ui when successfully signs in
       }
     };
 

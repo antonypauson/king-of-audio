@@ -15,21 +15,17 @@ const queryClient = new QueryClient();
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAppLoading, setIsAppLoading] = useState(false); // New global loading state
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, but check if email is verified
         if (user.emailVerified) {
           setIsAuthenticated(true);
         } else {
-          // User is signed in but email not verified
           setIsAuthenticated(false);
-          // Optionally, sign out the user or redirect to a specific verification page
-          // For now, we'll just keep them on the Auth page
         }
       } else {
-        // User is signed out
         setIsAuthenticated(false);
       }
       setLoading(false);
@@ -37,15 +33,12 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // Removed global loading message, Auth component handles its own loading.
-  // const handleLoginSuccess is no longer directly used for setting isAuthenticated,
-  // as onAuthStateChanged handles the state changes.
+  // This function is now used to trigger the global app loading state
   const handleLoginSuccess = () => {
-    // This function is called from Auth.tsx.
-    // If a user signs in, we need to re-check their auth state to see if they are verified.
-    // Firebase's onAuthStateChanged listener will handle this.
-    // For sign-up, onLoginSuccess is no longer called directly.
-    // For sign-in, onAuthStateChanged will trigger and check verification.
+    setIsAppLoading(true); // Activate global loading
+    // The onAuthStateChanged listener will eventually set isAuthenticated to true,
+    // which will then render the Index component.
+    // Index component will then signal when it's done loading its data.
   };
 
   return (
@@ -56,13 +49,19 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             {isAuthenticated ? (
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Index onDataLoaded={() => setIsAppLoading(false)} />} /> // Pass callback to Index
             ) : (
               <Route path="/" element={<Auth onLoginSuccess={handleLoginSuccess} />} />
             )}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        {isAppLoading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
+            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-primary"></div>
+            <span className="sr-only">Loading game...</span>
+          </div>
+        )}
       </TooltipProvider>
     </QueryClientProvider>
   );

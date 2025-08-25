@@ -13,7 +13,7 @@ const memeMap: { [key: string]: string } = { //here are the embedded meme links 
   "Invalid Credentials": "<div style=\"width:100%;height:0;padding-bottom:75%;position:relative;\"><iframe src=\"https://giphy.com/embed/YUG7qlbCeRutqL1jPU\" width=\"100%\" height=\"100%\" style=\"position:absolute\" frameBorder=\"0\" class=\"giphy-embed\" allowFullScreen></iframe></div>",
   "Email Not Found": "<div style=\"width:100%;height:0;padding-bottom:74%;position:relative;\"><iframe src=\"https://giphy.com/embed/ZOFFvvABgG7dK\" width=\"100%\" height=\"100%\" style=\"position:absolute\" frameBorder=\"0\" class=\"giphy-embed\" allowFullScreen></iframe></div>",
   "General Error": "<div style=\"width:100%;height:0;padding-bottom:77%;position:relative;\"><iframe src=\"https://giphy.com/embed/L3QT1L99qG7M6gFRpM\" width=\"100%\" height=\"100%\" style=\"position:absolute\" frameBorder=\"0\" class=\"giphy-embed\" allowFullScreen></iframe></div>",
-  "Successful Sign-In": "<div style=\"width:100%;height:0;padding-bottom:56%;position:relative;\"><iframe src=\"https://giphy.com/embed/hrpjWzFIbOjkxltbBG\" width=\"100%\" height=\"100%\" style=\"position:absolute\" frameBorder=\"0\" class=\"giphy-embed\" allowFullScreen></iframe></div>" // Using default for now, user can provide a specific one
+  "Successful Sign-In": "<div style=\"width:100%;height:0;padding-bottom:73%;position:relative;\"><iframe src=\"https://giphy.com/embed/dBk2G7v7ToRO0\" width=\"100%\" height=\"100%\" style=\"position:absolute\" frameBorder=\"0\" class=\"giphy-embed\" allowFullScreen></iframe></div>"
 };
 
 const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
@@ -39,7 +39,7 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
       setMessage(null);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(userCredential.user);
-      setMessage("Sign up successful. Check our spam folder (since we can't afford a domain name right now) and verify your account. You can now sign in after verification.");
+      setMessage("Sign up successful. Check your spam folder (since I can't afford a domain name right now!) and verify your account. You can now sign in after verification.");
       setCurrentMeme(memeMap["Successful Sign-Up"]);
       setEmail(''); // Clear email field
       setPassword(''); // Clear password field
