@@ -18,7 +18,20 @@ const App = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
+      if (user) {
+        // User is signed in, but check if email is verified
+        if (user.emailVerified) {
+          setIsAuthenticated(true);
+        } else {
+          // User is signed in but email not verified
+          setIsAuthenticated(false);
+          // Optionally, sign out the user or redirect to a specific verification page
+          // For now, we'll just keep them on the Auth page
+        }
+      } else {
+        // User is signed out
+        setIsAuthenticated(false);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -29,7 +42,11 @@ const App = () => {
   }
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
+    // This function is called from Auth.tsx.
+    // If a user signs in, we need to re-check their auth state to see if they are verified.
+    // Firebase's onAuthStateChanged listener will handle this.
+    // For sign-up, onLoginSuccess is no longer called directly.
+    // For sign-in, onAuthStateChanged will trigger and check verification.
   };
 
   return (

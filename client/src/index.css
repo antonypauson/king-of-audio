@@ -123,6 +123,14 @@ All colors MUST be HSL.
     box-shadow: var(--glow-primary);
   }
 
+  .shadow-glow-primary-on-hover {
+    transition: box-shadow 0.3s ease-in-out; /* Add transition for smooth effect */
+  }
+
+  .shadow-glow-primary-on-hover:hover {
+    box-shadow: var(--glow-primary); /* Apply the glow on hover */
+  }
+
   .glowing-border {
     border: 2px solid hsl(var(--neon-purple));
     box-shadow: 0 0 15px hsl(var(--neon-purple) / 0.7), inset 0 0 15px hsl(var(--neon-purple) / 0.7);
