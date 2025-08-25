@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; 
-import { mockUsers, mockCurrentGameState, mockActivityFeed, mockCurrentUser, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
+import { mockUsers, mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
 
 const app = express();
 const server = createServer(app);
@@ -64,6 +64,14 @@ app.post('/api/add-new-user', (req, res) => {
     const newUser = addNewUser(id, username, avatarUrl);
     if (newUser) {
         io.emit('usersUpdated', mockUsers); // Broadcast updated users to all clients
+        // Add a 'join' activity event for the new user
+        addActivityEvent({
+            id: `event_${Date.now()}_join_${id}`,
+            type: "join",
+            userId: id,
+            timestamp: Date.now(),
+        });
+        io.emit('activityFeedUpdated', mockActivityFeed); // Broadcast updated activity feed
         res.status(201).json(newUser);
     } else {
         res.status(200).json({ message: 'User already exists.' }); // User already in mockUsers

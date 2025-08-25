@@ -120,8 +120,36 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
         // setCurrentUser is now handled by firebaseUser directly or derived from usersData
 
         // Check if Firebase user has a display name
-        if (firebaseUser && !firebaseUser.displayName) {
-          setShowUsernameModal(true);
+        if (firebaseUser) {
+          // If user doesn't have a display name, show the modal
+          if (!firebaseUser.displayName) {
+            setShowUsernameModal(true);
+          } else {
+            // If user has a display name, ensure they are added to backend and trigger join event
+            const avatarSeed = firebaseUser.displayName || firebaseUser.uid;
+            const generatedAvatarUrl = `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${avatarSeed}`;
+
+            try {
+              const addUserResponse = await fetch('http://localhost:5000/api/add-new-user', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  id: firebaseUser.uid,
+                  username: firebaseUser.displayName,
+                  avatarUrl: generatedAvatarUrl,
+                }),
+              });
+
+              if (!addUserResponse.ok) {
+                const errorData = await addUserResponse.json();
+                console.error("Error adding user to backend on login:", errorData);
+              }
+            } catch (err) {
+              console.error("Network error adding user to backend on login:", err);
+            }
+          }
         }
 
       } catch (error) {
@@ -187,7 +215,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             {/* Left Sidebar - Activity Feed */}
             <aside className="lg:col-span-1">
               <div className="sticky top-32">
-                <ActivityFeed activityFeed={activityFeed} />
+                <ActivityFeed activityFeed={activityFeed} users={users} />
               </div>
             </aside>
 

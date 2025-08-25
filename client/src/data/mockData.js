@@ -199,6 +199,8 @@ export function formatActivity(event, usersMap) {
       return `${user.username} uploaded a new audio (${timeAgoString})`;
     case "failed":
       return `${user.username} tried to take over ${targetUser.username} but failed (${timeAgoString})`;
+    case "join": // New join event
+      return `${user.username} entered the arena (${timeAgoString})`;
     default:
       return `${user.username} did something (${timeAgoString})`;
   }

@@ -1,19 +1,34 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Crown, Mic, Timer, Trophy, XCircle, Swords } from "lucide-react";
+import { Crown, Mic, Timer, Trophy, XCircle, Swords, LogIn } from "lucide-react";
 
-import { usersMap, formatActivity } from "@/data/mockData"; 
+import { usersMap as initialUsersMap, formatActivity } from "@/data/mockData"; 
 
 interface ActivityEvent {
   id: string;
-  type: 'takeover' | 'upload' | 'failed' | 'dethroned';
+  type: 'takeover' | 'upload' | 'failed' | 'dethroned' | 'join'; // Added 'join' type
   userId: string;
   targetUserId?: string;
   timestamp: number;
 }
 
-// Accept activityFeed as a prop
-export default function ActivityFeed({ activityFeed }: { activityFeed: ActivityEvent[] }) { // Added prop
+interface User {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  totalTimeHeld: number;
+  currentClipUrl: string | null;
+  currentReignStart: number | null;
+}
+
+// Accept activityFeed and users as props
+export default function ActivityFeed({ activityFeed, users }: { activityFeed: ActivityEvent[]; users: User[] }) { // Added users prop
+  // Create usersMap dynamically from the users prop
+  const usersMap: { [key: string]: User } = users.reduce((acc, user) => {
+    acc[user.id] = user;
+    return acc;
+  }, {});
+
   const activities: ActivityEvent[] = [...activityFeed].sort((a, b) => b.timestamp - a.timestamp); // Used prop
 
   const getActivityIcon = (type: ActivityEvent['type']) => {
@@ -26,6 +41,8 @@ export default function ActivityFeed({ activityFeed }: { activityFeed: ActivityE
         return <XCircle className="h-4 w-4 text-destructive" />;
       case 'dethroned':
         return <Swords className="h-4 w-4 text-muted-foreground" />;
+      case 'join': // New join event icon
+        return <LogIn className="h-4 w-4 text-primary" />;
       default:
         return <Timer className="h-4 w-4 text-muted-foreground" />;
     }
@@ -40,6 +57,8 @@ export default function ActivityFeed({ activityFeed }: { activityFeed: ActivityE
       case 'failed':
         return "border-destructive/30";
       case 'dethroned':
+        return "border-primary/30";
+      case 'join': // New join event style
         return "border-primary/30";
       default:
         return "border-border";
