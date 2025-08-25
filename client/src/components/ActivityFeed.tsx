@@ -6,7 +6,7 @@ import { usersMap as initialUsersMap, formatActivity } from "@/data/mockData";
 
 interface ActivityEvent {
   id: string;
-  type: 'takeover' | 'upload' | 'failed' | 'dethroned' | 'join'; // Added 'join' type
+  type: 'takeover' | 'upload' | 'failed' | 'dethroned' | 'join'; // Only 'uplod', 'dethroned' and 'join' work for now
   userId: string;
   targetUserId?: string;
   timestamp: number;
@@ -58,8 +58,8 @@ export default function ActivityFeed({ activityFeed, users }: { activityFeed: Ac
         return "border-destructive/30";
       case 'dethroned':
         return "border-primary/30";
-      case 'join': // New join event style
-        return "border-primary/30";
+      case 'join': 
+        return "border-destructive/30";
       default:
         return "border-border";
     }

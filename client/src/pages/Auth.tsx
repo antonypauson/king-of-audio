@@ -22,18 +22,10 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [currentMeme, setCurrentMeme] = useState<string>(memeMap["Default"]); //memes based on the error messages 
-  const [isLoading, setIsLoading] = useState(true); // New loading state
-
-  // Simulate loading for the meme (as iframe load detection is complex with dangerouslySetInnerHTML)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000); // Adjust delay as needed
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
 
   const handleSignUp = async () => {
+    setIsLoading(true); // Start loading
     try {
       setError(null);
       setMessage(null);
@@ -47,14 +39,26 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
       console.error("Error during sign up:", err);
       setError(err.message);
       setCurrentMeme(memeMap["General Error"]); // Set general error meme on sign-up failure
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
   const handleSignIn = async () => {
+    setIsLoading(true); // Start loading
     try {
       setError(null); // Clear previous errors
       setMessage(null); // Clear previous messages
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      if (!userCredential.user.emailVerified) {
+        // If email is not verified, sign out the user and show an error
+        await auth.signOut();
+        setError("Please verify your email address before signing in. Check your spam folder for the verification email.");
+        setCurrentMeme(memeMap["General Error"]); // Or a specific meme for unverified email
+        return; // Stop further execution
+      }
+
       console.log("Sign in successful!");
       setCurrentMeme(memeMap["Successful Sign-In"]); // Set successful sign-in meme
       onLoginSuccess();
@@ -88,6 +92,8 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
           setCurrentMeme(memeMap["General Error"]); // Fallback to general error meme
       }
       setError(errorMessage);
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
