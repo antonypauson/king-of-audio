@@ -3,6 +3,10 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; 
 import { mockUsers, mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
+import dotenv from "dotenv"; 
+dotenv.config(); 
+import { createClient } from '@supabase/supabase-js';
+
 
 const app = express();
 const server = createServer(app);
@@ -15,6 +19,11 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 5000;
 
+const supabaseUrl = process.env.SUPABASE_URL; 
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY; 
+export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey); 
+
+
 //MIDDLEWARES
 //cors
 app.use(cors());
@@ -26,6 +35,21 @@ app.get('/ping', (req, res) => { //checking
     res.send('pong');
 });
 
+app.get('/api/testing', async (req, res) => {
+    try {
+        const {data, error} = await supabase.from('testing').insert([{message: "Test message from backend"}]); 
+
+        if (error) {
+            console.error("ERROR"); 
+            return res.status(500).json({success: false, message: "Failed"})
+        }
+
+        console.log("Successful insertion"); 
+        res.status(200).json({success: true, message: 'Successful data insert'})
+    } catch (e) {
+        console.error(e); 
+    }
+})
 
 app.get('/api/users', (req, res) => {
     res.json(mockUsers);
