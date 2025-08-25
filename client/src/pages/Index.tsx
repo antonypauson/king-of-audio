@@ -68,34 +68,59 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     return users.find(user => user.currentReignStart !== null);
   }, [users]);
 
-  //current user's info from our 'user' array extraction
-  const currentUserData = users.find(user => user.id === currentUser?.id);
+  //current user's info from Firebase auth.currentUser
+  // This will be the actual authenticated user, combined with data from backend users array
+  const firebaseUser = auth.currentUser;
+  const currentUserData = firebaseUser ? (() => {
+    const userFromBackend = users.find(u => u.id === firebaseUser.uid);
+    const avatarSeed = firebaseUser.displayName || firebaseUser.uid;
+    const generatedAvatarUrl = `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${avatarSeed}`;
+
+    if (userFromBackend) {
+      // If user exists in backend, combine Firebase data with backend data
+      return {
+        ...userFromBackend,
+        id: firebaseUser.uid, // Ensure ID is Firebase UID
+        username: firebaseUser.displayName || userFromBackend.username, // Prefer Firebase displayName
+        avatarUrl: generatedAvatarUrl, // Use generated avatar
+      };
+    } else {
+      // If user not yet in backend (e.g., just signed up and set username), use Firebase data as primary
+      return {
+        id: firebaseUser.uid,
+        username: firebaseUser.displayName || 'Guest',
+        avatarUrl: generatedAvatarUrl,
+        totalTimeHeld: 0, // Default for new users not yet in backend
+        currentClipUrl: null,
+        currentReignStart: null,
+      };
+    }
+  })() : null;
 
   // fetching initial mock data from the backend
   useEffect(() => {
     const fetchData = async () => {
       try { //these states were null intially
-        const [usersRes, gameStateRes, activityFeedRes, currentUserRes] = await Promise.all([
+        const [usersRes, gameStateRes, activityFeedRes] = await Promise.all([
           fetch('http://localhost:5000/api/users'),
           fetch('http://localhost:5000/api/current-game-state'),
           fetch('http://localhost:5000/api/activity-feed'),
-          fetch('http://localhost:5000/api/current-user'), //all the links for the back end fetching. Now we have the mock data. 
+          // Removed fetch for /api/current-user
         ]);
 
-        const [usersData, gameStateData, activityFeedData, currentUserData] = await Promise.all([
+        const [usersData, gameStateData, activityFeedData] = await Promise.all([
           usersRes.json(),
           gameStateRes.json(),
           activityFeedRes.json(),
-          currentUserRes.json(),
         ]);
 
         setUsers(usersData);
         setCurrentGameState(gameStateData);
         setActivityFeed(activityFeedData);
-        setCurrentUser(currentUserData);
+        // setCurrentUser is now handled by firebaseUser directly or derived from usersData
 
         // Check if Firebase user has a display name
-        if (auth.currentUser && !auth.currentUser.displayName) {
+        if (firebaseUser && !firebaseUser.displayName) {
           setShowUsernameModal(true);
         }
 
@@ -109,13 +134,14 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     };
 
     fetchData();
-  }, []); // Empty dependency array means this runs once on mount
+  }, [firebaseUser]); // Add firebaseUser to dependency array to re-run when user changes
 
   const handleUsernameSet = () => {
     setShowUsernameModal(false);
     // Force a re-render or re-check of the user's display name
     // A simple way is to update the currentUser state, which will trigger a re-render
-    setCurrentUser({ ...auth.currentUser, displayName: auth.currentUser.displayName });
+    // No longer need to manually set currentUser here, as firebaseUser will update
+    // and the derived currentUserData will reflect the change.
   };
 
   return (
@@ -172,7 +198,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
                 updateUserClipAndReign={handleUpdateUserClipAndReign}
                 dethroneUser={handleDethroneUser}
                 findReigningUser={handleFindReigningUser}
-                currentUser={currentUser}
+                currentUser={currentUserData} // Pass currentUserData (Firebase user)
                 currentGameState={currentGameState}
                 users={users}
               />

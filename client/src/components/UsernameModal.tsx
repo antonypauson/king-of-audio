@@ -60,6 +60,31 @@ const UsernameModal: React.FC<UsernameModalProps> = ({ user, onUsernameSet }) =>
       await updateProfile(user, {
         displayName: trimmedUsername, // Firebase stores it as is, we just use it as is
       });
+
+      // Generate DiceBear avatar URL
+      const avatarUrl = `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${trimmedUsername}`;
+
+      // Add user to backend mockUsers
+      const addUserResponse = await fetch('http://localhost:5000/api/add-new-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: user.uid,
+          username: trimmedUsername,
+          avatarUrl: avatarUrl,
+        }),
+      });
+
+      if (!addUserResponse.ok) {
+        const errorData = await addUserResponse.json();
+        console.error("Error adding user to backend:", errorData);
+        setError(`Failed to add user to game: ${errorData.message || 'Unknown error'}`);
+        // Optionally, revert displayName if backend fails, or handle differently
+        return;
+      }
+
       onUsernameSet(); // Notify parent component that username is set
     } catch (err: any) {
       console.error("Error setting username:", err);

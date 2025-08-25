@@ -95,9 +95,9 @@ export let mockActivityFeed = [
 // ---------------------------
 // current user? - This will be determined by authentication later
 // ---------------------------
-export const mockCurrentUser = {
-  id: "user_joe_dane", // Changed to joe_dane for consistency with initial reigning user
-};
+// export const mockCurrentUser = {
+//   id: "user_joe_dane", // current user is now from firebase, so we removed it. 
+// };
 
 // Helper function to update a user's clip URL and reign start, and update game state
 // when current user uploads an audio, we update its currentClip and currentreignStart
@@ -205,6 +205,27 @@ export function formatActivity(event, usersMap) {
 export function isUsernameUnique(usernameToCheck) {
   const lowerCaseUsernameToCheck = usernameToCheck.toLowerCase();
   return !mockUsers.some(user => user.username.toLowerCase() === lowerCaseUsernameToCheck);
+}
+
+// Helper function to add a new user to mockUsers if they don't already exist
+// we'll call it after a user signs in and creates a username
+export function addNewUser(id, username, avatarUrl) {
+  const userExists = mockUsers.some(user => user.id === id);
+  if (!userExists) {
+    const newUser = {
+      id: id,
+      username: username,
+      avatarUrl: avatarUrl,
+      totalTimeHeld: 0,
+      currentClipUrl: null,
+      currentReignStart: null,
+    };
+    mockUsers.push(newUser);
+    console.log("New user added:", newUser);
+    return newUser;
+  }
+  console.log("User already exists:", id);
+  return null;
 }
 
 // Example usersMap for easy lookup (can be generated dynamically or kept here)

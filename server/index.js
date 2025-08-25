@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; 
-import { mockUsers, mockCurrentGameState, mockActivityFeed, mockCurrentUser, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique } from './data.js'; //importing all the mockData and helper functions
+import { mockUsers, mockCurrentGameState, mockActivityFeed, mockCurrentUser, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
 
 const app = express();
 const server = createServer(app);
@@ -39,10 +39,12 @@ app.get('/api/activity-feed', (req, res) => {
     res.json(mockActivityFeed);
 });
 
-app.get('/api/current-user', (req, res) => {
-    res.json(mockCurrentUser);
-});
+// app.get('/api/current-user', (req, res) => {
+//     res.json(mockCurrentUser); //we dont get current user from mockData anymore
+// });
 
+// we check if a username is unique after looking up mockdata
+// sent back the Index.tsx file
 app.get('/api/check-username-uniqueness', (req, res) => {
     const { username } = req.query;
     if (!username) {
@@ -50,6 +52,22 @@ app.get('/api/check-username-uniqueness', (req, res) => {
     }
     const unique = isUsernameUnique(username);
     res.json({ isUnique: unique });
+});
+
+// we after a username has been entered, we create new user
+// add that to our mockUsers data
+app.post('/api/add-new-user', (req, res) => {
+    const { id, username, avatarUrl } = req.body;
+    if (!id || !username || !avatarUrl) {
+        return res.status(400).json({ error: 'User ID, username, and avatar URL are required.' });
+    }
+    const newUser = addNewUser(id, username, avatarUrl);
+    if (newUser) {
+        io.emit('usersUpdated', mockUsers); // Broadcast updated users to all clients
+        res.status(201).json(newUser);
+    } else {
+        res.status(200).json({ message: 'User already exists.' }); // User already in mockUsers
+    }
 });
 
 // update the totalTimeHeld for current reigning user, second by second
