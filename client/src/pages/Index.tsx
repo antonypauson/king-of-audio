@@ -212,10 +212,10 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-base sm:text-lg">🎵</span>
+                <span className="text-primary-foreground font-bold text-base sm:text-lg">👑</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Audio Boy
+                King of Audio
               </h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
