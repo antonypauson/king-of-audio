@@ -15,7 +15,6 @@ const queryClient = new QueryClient();
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isAppLoading, setIsAppLoading] = useState(false); // New global loading state
   const [authCheckComplete, setAuthCheckComplete] = useState(false); // New state for auth check completion
 
   useEffect(() => {
@@ -35,14 +34,6 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // This function is now used to trigger the global app loading state
-  const handleLoginSuccess = () => {
-    setIsAppLoading(true); // Activate global loading
-    // The onAuthStateChanged listener will eventually set isAuthenticated to true,
-    // which will then render the Index component.
-    // Index component will then signal when it's done loading its data.
-  };
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -52,9 +43,9 @@ const App = () => {
           {authCheckComplete ? (
             <Routes>
               {isAuthenticated ? (
-                <Route path="/" element={<Index onDataLoaded={() => setIsAppLoading(false)} />} /> // Pass callback to Index
+                <Route path="/" element={<Index />} />
               ) : (
-                <Route path="/" element={<Auth onLoginSuccess={handleLoginSuccess} />} />
+                <Route path="/" element={<Auth />} />
               )}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -66,12 +57,6 @@ const App = () => {
             </div>
           )}
         </BrowserRouter>
-        {isAppLoading && (
-          <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
-            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-primary"></div>
-            <span className="sr-only">Loading game...</span>
-          </div>
-        )}
       </TooltipProvider>
     </QueryClientProvider>
   );
