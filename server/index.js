@@ -2,10 +2,10 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; 
-import { mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
+// import { mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
 import dotenv from "dotenv"; 
 dotenv.config(); 
-import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase } from './supabaseService.js';
+import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase, findReigningUserInSupabase } from './supabaseService.js';
 import { createClient } from '@supabase/supabase-js';
 import admin from 'firebase-admin'; //firebase admin sdk
 import { createRequire } from 'module';
@@ -89,13 +89,15 @@ app.get('/api/users', async (req, res) => {
     res.json(users);
 });
 
-app.get('/api/current-game-state', (req, res) => {
-    res.json(mockCurrentGameState);
-});
+// app.get('/api/current-game-state', (req, res) => {
+//     res.json(mockCurrentGameState);
+// }); 
+//we dont need this endpoint anymore, as we are taking current game state from our db. 
 
-app.get('/api/activity-feed', (req, res) => {
-    res.json(mockActivityFeed);
-});
+// app.get('/api/activity-feed', (req, res) => {
+//     res.json(mockActivityFeed);
+// });
+//dont need this endpoint anymore, as we are taking activity feed from our db table
 
 // app.get('/api/current-user', (req, res) => {
 //     res.json(mockCurrentUser); //we dont get current user from mockData anymore
@@ -139,11 +141,14 @@ app.post('/api/add-new-user', async (req, res) => {
     }
 });
 
-// update the totalTimeHeld for current reigning user, second by second
-// setInterval(() => {
-//     incrementReigningUserTotalTime(); //find the reigning player, and increment their totalTimeHeld inside 'users' 
-//     io.emit('usersUpdated', mockUsers); // Broadcast updated users to all clients
-// }, 1000); // Update every second
+setInterval(async () => {
+    const reigningUser = await findReigningUserInSupabase();
+    if (reigningUser) {
+        await incrementReigningUserTotalTimeInSupabase(reigningUser.id); //find the reigning player, and increment their totalTimeHeld inside 'users' 
+        const updatedUsers = await getUsersFromSupabase();
+        io.emit('usersUpdated', updatedUsers); // Broadcast updated users to all clients
+    }
+}, 1000); // Update every second
 
 // SOCKET IO SET UP
 io.on('connection', async (socket) => { //socket represents only one specific client
@@ -168,7 +173,7 @@ io.on('connection', async (socket) => { //socket represents only one specific cl
     }
 
     //addActivity event from client
-    socket.on('addActivity', (event) => {
+    socket.on('addActivity', async (event) => {
         console.log('Processing addActivity event:', event);
         // Ensure the userId in the event is the verified socket.uid
         const verifiedEvent = { ...event, userId: socket.uid };
@@ -177,28 +182,31 @@ io.on('connection', async (socket) => { //socket represents only one specific cl
     });
 
     //updateUserClipAndReign event from client
-    socket.on('updateUserClipAndReign', ({ userId, newClipUrl, newReignStart }) => {
+    socket.on('updateUserClipAndReign', async ({ userId, newClipUrl, newReignStart }) => {
         // Ensure the userId is the verified socket.uid
         if (userId !== socket.uid) {
             console.warn(`Attempted to update user ${userId} with unmatching socket.uid ${socket.uid}`);
             return; // Prevent unauthorized updates
         }
         console.log('Processing updateUserClipAndReign event:', { userId: socket.uid, newClipUrl, newReignStart });
-        updateMockUserClipAndReign(socket.uid, newClipUrl, newReignStart); // we finds out current user, and update it in 'users', then also put it inside 'gameState' to set as reigning player
-        io.emit('usersUpdated', mockUsers); // Broadcast updated users to every client
-        io.emit('gameStateUpdated', mockCurrentGameState); // Broadcast updated game state to every client
+        await updateUserClipAndReignInSupabase(socket.uid, newClipUrl, newReignStart); // we finds out current user, and update it in 'users', then also put it inside 'gameState' to set as reigning player
+        const updatedUsers = await getUsersFromSupabase();
+        const updatedGameState = await getGameStateFromSupabase();
+        io.emit('usersUpdated', updatedUsers); // Broadcast updated users to every client
+        io.emit('gameStateUpdated', updatedGameState); // Broadcast updated game state to every client
     });
 
     //dethroneUser event from client
-    socket.on('dethroneUser', ({ userId }) => {
+    socket.on('dethroneUser', async ({ userId }) => {
         // Ensure the userId is the verified socket.uid
         if (userId !== socket.uid) {
             console.warn(`Attempted to dethrone user ${userId} with unmatching socket.uid ${socket.uid}`);
             return; // Prevent unauthorized actions
         }
         console.log('Processing dethroneUser event for userId:', socket.uid);
-        dethroneUser(socket.uid); // Update data of dethroned reigning user in 'user' espeically their totalTimeHeld and currentReignStart to null
-        io.emit('usersUpdated', mockUsers); // Broadcast updated users data to everyone
+        await dethroneUserInSupabase(socket.uid); // Update data of dethroned reigning user in 'user' espeically their totalTimeHeld and currentReignStart to null
+        const updatedUsers = await getUsersFromSupabase();
+        io.emit('usersUpdated', updatedUsers); // Broadcast updated users data to everyone
     });
 
     socket.on('disconnect', () => {
