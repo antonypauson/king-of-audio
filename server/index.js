@@ -2,10 +2,19 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; 
-import { mockUsers, mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
+import { mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
 import dotenv from "dotenv"; 
 dotenv.config(); 
+import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase } from './supabaseService.js';
 import { createClient } from '@supabase/supabase-js';
+import admin from 'firebase-admin'; //firebase admin sdk
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const serviceAccount = require('./serviceAccountKey.json');//contains firebase sensitive data for verifying the user's token id
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 
 const app = express();
@@ -21,7 +30,7 @@ const PORT = process.env.PORT || 5000;
 
 const supabaseUrl = process.env.SUPABASE_URL; 
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY; 
-export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey); 
+export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey); //exported our supabase client, so it can used inside supabaseService.js file
 
 
 //MIDDLEWARES
@@ -29,6 +38,27 @@ export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 app.use(cors());
 //parsing json into javascript object
 app.use(express.json()); // 
+
+// Middleware to verify Firebase ID Token
+// this is applied using app.use(verifyFirebaseToken) later
+const verifyFirebaseToken = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'No token provided or invalid format.' });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]; //takes out the token from our Bearer token in the header
+
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken); //contains auth details like username, uid etc. 
+        req.user = decodedToken; // Attach the decoded token to the request object
+        next(); //continue with next objective of the request
+    } catch (error) {
+        console.error('Error verifying Firebase ID token:', error);
+        return res.status(403).json({ message: 'Invalid or expired token.' });
+    }
+}; 
 
 // API ENDPOINTS WE ARE USING
 app.get('/ping', (req, res) => { //checking
@@ -51,8 +81,12 @@ app.get('/api/testing', async (req, res) => {
     }
 })
 
-app.get('/api/users', (req, res) => {
-    res.json(mockUsers);
+app.use(verifyFirebaseToken); // Apply middleware to all routes below this line
+
+app.get('/api/users', async (req, res) => {
+    //we were taking users from mockUsers, not its from our supabase db.
+    const users = await getUsersFromSupabase();
+    res.json(users);
 });
 
 app.get('/api/current-game-state', (req, res) => {
@@ -69,25 +103,28 @@ app.get('/api/activity-feed', (req, res) => {
 
 // we check if a username is unique after looking up mockdata
 // sent back the Index.tsx file
-app.get('/api/check-username-uniqueness', (req, res) => {
+app.get('/api/check-username-uniqueness', async (req, res) => {
     const { username } = req.query;
     if (!username) {
         return res.status(400).json({ error: 'Username parameter is required.' });
     }
-    const unique = isUsernameUnique(username);
+    const unique = await isUsernameUniqueInSupabase(username); //isUsernameUniqueInSupabase checking if the name is unique
     res.json({ isUnique: unique });
 });
 
 // we after a username has been entered, we create new user
-// add that to our mockUsers data
-app.post('/api/add-new-user', (req, res) => {
-    const { id, username, avatarUrl } = req.body;
+// add that to our users table
+app.post('/api/add-new-user', async (req, res) => {
+    const { username, avatarUrl } = req.body;
+    const id = req.user.uid; // Get UID from verified token
     if (!id || !username || !avatarUrl) {
         return res.status(400).json({ error: 'User ID, username, and avatar URL are required.' });
     }
-    const newUser = addNewUser(id, username, avatarUrl);
+    
+    const newUser = await addNewUserToSupabase(id, username, avatarUrl);
     if (newUser) {
-        io.emit('usersUpdated', mockUsers); // Broadcast updated users to all clients
+        const updatedUsers = await getUsersFromSupabase(); // Fetch updated list of users
+        io.emit('usersUpdated', updatedUsers); // Broadcast updated users to all clients
         // Add a 'join' activity event for the new user
         addActivityEvent({
             id: `event_${Date.now()}_join_${id}`,
@@ -103,34 +140,64 @@ app.post('/api/add-new-user', (req, res) => {
 });
 
 // update the totalTimeHeld for current reigning user, second by second
-setInterval(() => {
-    incrementReigningUserTotalTime(); //find the reigning player, and increment their totalTimeHeld inside 'users' 
-    io.emit('usersUpdated', mockUsers); // Broadcast updated users to all clients
-}, 1000); // Update every second
+// setInterval(() => {
+//     incrementReigningUserTotalTime(); //find the reigning player, and increment their totalTimeHeld inside 'users' 
+//     io.emit('usersUpdated', mockUsers); // Broadcast updated users to all clients
+// }, 1000); // Update every second
 
 // SOCKET IO SET UP
-io.on('connection', (socket) => { //socket represents only one specific client
+io.on('connection', async (socket) => { //socket represents only one specific client
     console.log('A user connected');
+
+    const idToken = socket.handshake.query.token;
+
+    if (!idToken) {
+        console.log('No token provided for Socket.IO connection.');
+        socket.disconnect(true); // Disconnect unauthenticated socket
+        return;
+    }
+
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        socket.uid = decodedToken.uid; // Attach UID to the socket object
+        console.log(`User ${socket.uid} connected via Socket.IO`);
+    } catch (error) {
+        console.error('Error verifying Socket.IO token:', error);
+        socket.disconnect(true); // Disconnect on token verification failure
+        return;
+    }
 
     //addActivity event from client
     socket.on('addActivity', (event) => {
         console.log('Processing addActivity event:', event);
-        addActivityEvent(event); // Update the data inside 'data.js' file using this helper function
+        // Ensure the userId in the event is the verified socket.uid
+        const verifiedEvent = { ...event, userId: socket.uid };
+        addActivityEvent(verifiedEvent); // Update the data inside 'data.js' file using this helper function
         io.emit('activityFeedUpdated', mockActivityFeed); // we are emitting this 'activityFeedUpdated' and updated 'mockActivityFeed'  to all clients, not just our single client
     });
 
     //updateUserClipAndReign event from client
     socket.on('updateUserClipAndReign', ({ userId, newClipUrl, newReignStart }) => {
-        console.log('Processing updateUserClipAndReign event:', { userId, newClipUrl, newReignStart });
-        updateMockUserClipAndReign(userId, newClipUrl, newReignStart); // we finds out current user, and update it in 'users', then also put it inside 'gameState' to set as reigning player
+        // Ensure the userId is the verified socket.uid
+        if (userId !== socket.uid) {
+            console.warn(`Attempted to update user ${userId} with unmatching socket.uid ${socket.uid}`);
+            return; // Prevent unauthorized updates
+        }
+        console.log('Processing updateUserClipAndReign event:', { userId: socket.uid, newClipUrl, newReignStart });
+        updateMockUserClipAndReign(socket.uid, newClipUrl, newReignStart); // we finds out current user, and update it in 'users', then also put it inside 'gameState' to set as reigning player
         io.emit('usersUpdated', mockUsers); // Broadcast updated users to every client
         io.emit('gameStateUpdated', mockCurrentGameState); // Broadcast updated game state to every client
     });
 
     //dethroneUser event from client
     socket.on('dethroneUser', ({ userId }) => {
-        console.log('Processing dethroneUser event for userId:', userId);
-        dethroneUser(userId); // Update data of dethroned reigning user in 'user' espeically their totalTimeHeld and currentReignStart to null
+        // Ensure the userId is the verified socket.uid
+        if (userId !== socket.uid) {
+            console.warn(`Attempted to dethrone user ${userId} with unmatching socket.uid ${socket.uid}`);
+            return; // Prevent unauthorized actions
+        }
+        console.log('Processing dethroneUser event for userId:', socket.uid);
+        dethroneUser(socket.uid); // Update data of dethroned reigning user in 'user' espeically their totalTimeHeld and currentReignStart to null
         io.emit('usersUpdated', mockUsers); // Broadcast updated users data to everyone
     });
 

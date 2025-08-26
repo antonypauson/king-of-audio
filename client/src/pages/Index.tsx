@@ -23,31 +23,57 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
 
   const socketRef = useRef(null); // Declare socketRef
 
+  // Helper to get Firebase ID token and construct headers
+  const getAuthHeaders = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const idToken = await user.getIdToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
+      };
+    }
+    return { 'Content-Type': 'application/json' }; // Fallback if no user (shouldn't happen for protected routes)
+  };
+
   // Socket.IO connection and listeners
   useEffect(() => {
-    socketRef.current = io('http://localhost:5000'); // Initialize socket using ref
+    const connectSocket = async () => {
+      const user = auth.currentUser;
+      let idToken = null;
+      if (user) {
+        idToken = await user.getIdToken();
+      }
 
-    socketRef.current.on('usersUpdated', (updatedUsers) => {
-      setUsers(updatedUsers);
-    });
+      socketRef.current = io('http://localhost:5000', {
+        query: {
+          token: idToken,
+        },
+      });
 
-    socketRef.current.on('gameStateUpdated', (updatedGameState) => {
-      setCurrentGameState(updatedGameState);
-    });
+      socketRef.current.on('usersUpdated', (updatedUsers) => {
+        setUsers(updatedUsers);
+      });
 
-    socketRef.current.on('activityFeedUpdated', (updatedActivityFeed) => {
-      console.log('Frontend received activityFeedUpdated:', updatedActivityFeed);
-      setActivityFeed(updatedActivityFeed);
-    });
+      socketRef.current.on('gameStateUpdated', (updatedGameState) => {
+        setCurrentGameState(updatedGameState);
+      });
 
-    // Clean up socket listeners and disconnect on component unmount
-    return () => {
-      socketRef.current.off('usersUpdated');
-      socketRef.current.off('gameStateUpdated');
-      socketRef.current.off('activityFeedUpdated');
-      socketRef.current.disconnect(); // Disconnect socket when component unmounts
+      socketRef.current.on('activityFeedUpdated', (updatedActivityFeed) => {
+        console.log('Frontend received activityFeedUpdated:', updatedActivityFeed);
+        setActivityFeed(updatedActivityFeed);
+      });
+
+      // Clean up socket listeners and disconnect on component unmount
+      return () => {
+        socketRef.current.off('usersUpdated');
+        socketRef.current.off('gameStateUpdated');
+        socketRef.current.off('activityFeedUpdated');
+        socketRef.current.disconnect(); // Disconnect socket when component unmounts
+      };
     };
-  }, []); // Empty dependency array: runs once on mount, cleans up on unmount
+    connectSocket(); // Call the async function
+  }, []); // This is the dependency array for the outer useEffect
 
   //to add new activity card
   const handleNewActivityEvent = useCallback((newEvent: any) => {
@@ -101,10 +127,11 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
   useEffect(() => {
     const fetchData = async () => {
       try { //these states were null intially
+        const headers = await getAuthHeaders();
         const [usersRes, gameStateRes, activityFeedRes] = await Promise.all([
-          fetch('http://localhost:5000/api/users'),
-          fetch('http://localhost:5000/api/current-game-state'),
-          fetch('http://localhost:5000/api/activity-feed'),
+          fetch('http://localhost:5000/api/users', { headers }),
+          fetch('http://localhost:5000/api/current-game-state', { headers }),
+          fetch('http://localhost:5000/api/activity-feed', { headers }),
           // Removed fetch for /api/current-user
         ]);
 
@@ -132,9 +159,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             try {
               const addUserResponse = await fetch('http://localhost:5000/api/add-new-user', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
+                headers: headers,
                 body: JSON.stringify({
                   id: firebaseUser.uid,
                   username: firebaseUser.displayName,

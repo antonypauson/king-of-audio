@@ -3,52 +3,52 @@
 // ---------------------------
 // Users (latest clip + cumulative time)
 // ---------------------------
-export let mockUsers = [
-  {
-    id: "user_joe_dane",
-    username: "joe_dane",
-    avatarUrl: "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=joe_dane",
-    totalTimeHeld: 12500, // cumulative time in seconds
-    currentClipUrl: "https://www.example.com/audio_joe.mp3",
-    currentReignStart: null, //not reigning player currently
-  },
-  {
-    id: "user_ihatebignannies",
-    username: "ihatebignannies",
-    avatarUrl:
-      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=ihatebignannies",
-    totalTimeHeld: 9800,
-    currentClipUrl: "https://www.example.com/audio_ihatebignannies.mp3",
-    currentReignStart: Date.now() - 8000, //currently reigning player
-  },
-  {
-    id: "user_lina_rocks",
-    username: "lina_rocks",
-    avatarUrl:
-      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=lina_rocks",
-    totalTimeHeld: 7200,
-    currentClipUrl: "https://www.example.com/audio_lina.mp3",
-    currentReignStart: null, 
-  },
-  {
-    id: "user_mike_the_mic",
-    username: "mike_the_mic",
-    avatarUrl:
-      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=mike_the_mic",
-    totalTimeHeld: 4500,
-    currentClipUrl: "https://www.example.com/audio_mike.mp3",
-    currentReignStart: null,
-  },
-  {
-    id: "user_your_mom",
-    username: "your_mom",
-    avatarUrl:
-      "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=your_mom",
-    totalTimeHeld: 4500,
-    currentClipUrl: "https://www.example.com/audio_mike.mp3",
-    currentReignStart: null,
-  },
-];
+// export let mockUsers = [
+//   {
+//     id: "user_joe_dane",
+//     username: "joe_dane",
+//     avatarUrl: "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=joe_dane",
+//     totalTimeHeld: 12500, // cumulative time in seconds
+//     currentClipUrl: "https://www.example.com/audio_joe.mp3",
+//     currentReignStart: null, //not reigning player currently
+//   },
+//   {
+//     id: "user_ihatebignannies",
+//     username: "ihatebignannies",
+//     avatarUrl:
+//       "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=ihatebignannies",
+//     totalTimeHeld: 9800,
+//     currentClipUrl: "https://www.example.com/audio_ihatebignannies.mp3",
+//     currentReignStart: Date.now() - 8000, //currently reigning player
+//   },
+//   {
+//     id: "user_lina_rocks",
+//     username: "lina_rocks",
+//     avatarUrl:
+//       "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=lina_rocks",
+//     totalTimeHeld: 7200,
+//     currentClipUrl: "https://www.example.com/audio_lina.mp3",
+//     currentReignStart: null, 
+//   },
+//   {
+//     id: "user_mike_the_mic",
+//     username: "mike_the_mic",
+//     avatarUrl:
+//       "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=mike_the_mic",
+//     totalTimeHeld: 4500,
+//     currentClipUrl: "https://www.example.com/audio_mike.mp3",
+//     currentReignStart: null,
+//   },
+//   {
+//     id: "user_your_mom",
+//     username: "your_mom",
+//     avatarUrl:
+//       "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=your_mom",
+//     totalTimeHeld: 4500,
+//     currentClipUrl: "https://www.example.com/audio_mike.mp3",
+//     currentReignStart: null,
+//   },
+// ];
 
 // ---------------------------
 // Current Game State
@@ -231,7 +231,7 @@ export function addNewUser(id, username, avatarUrl) {
 }
 
 // Example usersMap for easy lookup (can be generated dynamically or kept here)
-export const usersMap = mockUsers.reduce((acc, user) => {
-  acc[user.id] = user;
-  return acc;
-}, {});
+// export const usersMap = mockUsers.reduce((acc, user) => {
+//   acc[user.id] = user;
+//   return acc;
+// }, {});

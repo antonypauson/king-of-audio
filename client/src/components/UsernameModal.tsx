@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, updateProfile } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { auth } from '../../src/firebase'; // Import auth
 
 interface UsernameModalProps {
   user: User;
@@ -12,6 +13,19 @@ const UsernameModal: React.FC<UsernameModalProps> = ({ user, onUsernameSet }) =>
   const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Helper to get Firebase ID token and construct headers
+  const getAuthHeaders = async () => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const idToken = await currentUser.getIdToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
+      };
+    }
+    return { 'Content-Type': 'application/json' }; // Fallback if no user
+  };
 
   const handleSaveUsername = async () => {
     setError(null); // Clear previous errors
@@ -46,8 +60,9 @@ const UsernameModal: React.FC<UsernameModalProps> = ({ user, onUsernameSet }) =>
 
     setLoading(true);
     try {
+      const headers = await getAuthHeaders();
       // Check uniqueness with backend
-      const response = await fetch(`http://localhost:5000/api/check-username-uniqueness?username=${trimmedUsername}`);
+      const response = await fetch(`http://localhost:5000/api/check-username-uniqueness?username=${trimmedUsername}`, { headers });
       const data = await response.json();
 
       if (!data.isUnique) {
@@ -67,9 +82,7 @@ const UsernameModal: React.FC<UsernameModalProps> = ({ user, onUsernameSet }) =>
       // Add user to backend mockUsers
       const addUserResponse = await fetch('http://localhost:5000/api/add-new-user', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
           id: user.uid,
           username: trimmedUsername,
