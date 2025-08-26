@@ -345,3 +345,29 @@ export async function findReigningUserInSupabase() {
         currentReignStart: reigningUser.current_reign_start ? new Date(reigningUser.current_reign_start).getTime() : null,
     };
 }
+
+export async function uploadAudioToSupabase(audioBuffer, filename, contentType) {
+    try {
+        const { data, error } = await supabase.storage
+            .from('clips')
+            .upload(filename, audioBuffer, {
+                contentType: contentType,
+                upsert: true, // Overwrite if file exists
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+            .from('clips')
+            .getPublicUrl(filename);
+
+        return publicUrlData.publicUrl;
+
+    } catch (error) {
+        console.error('Error uploading audio to Supabase:', error);
+        throw error;
+    }
+}

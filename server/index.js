@@ -2,10 +2,11 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors'; 
+import fileUpload from 'express-fileupload'; // Import express-fileupload for audio uploading api endpoint
 // import { mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
 import dotenv from "dotenv"; 
 dotenv.config(); 
-import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase, updateUserClipAndReignInSupabase, dethroneUserInSupabase, findReigningUserInSupabase, getGameStateFromSupabase, getActivityFeedFromSupabase, addActivityEventToSupabase, incrementReigningUserTotalTimeInSupabase} from './supabaseService.js';
+import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase, updateUserClipAndReignInSupabase, dethroneUserInSupabase, findReigningUserInSupabase, getGameStateFromSupabase, getActivityFeedFromSupabase, addActivityEventToSupabase, incrementReigningUserTotalTimeInSupabase, uploadAudioToSupabase} from './supabaseService.js';
 import { createClient } from '@supabase/supabase-js';
 import admin from 'firebase-admin'; //firebase admin sdk
 import { createRequire } from 'module';
@@ -37,7 +38,8 @@ export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey); //exp
 //cors
 app.use(cors());
 //parsing json into javascript object
-app.use(express.json()); // 
+app.use(express.json()); 
+app.use(fileUpload()); // Use express-fileupload middleware 
 
 // Middleware to verify Firebase ID Token
 // this is applied using app.use(verifyFirebaseToken) later
@@ -141,6 +143,29 @@ app.post('/api/add-new-user', async (req, res) => {
         res.status(201).json(newUser);
     } else {
         res.status(500).json({ message: 'Failed to add or retrieve user.' }); // Handle case where newUser is null (error in supabaseService)
+    }
+});
+
+// New endpoint for audio upload
+app.post('/api/upload-audio', async (req, res) => {
+    if (!req.files || Object.keys(req.files).length === 0) {
+        return res.status(400).send('No files were uploaded.');
+    }
+
+    let audioFile = req.files.audioFile; // 'audioFile' is the name of the input field in the form
+
+    if (!audioFile.mimetype.startsWith('audio/')) {
+        return res.status(400).send('Only audio files are allowed.');
+    }
+
+    try {
+        // Use a fixed filename to ensure overwriting
+        const fixedFileName = 'king_of_audio.webm'; // webm format from recorder
+        const publicUrl = await uploadAudioToSupabase(audioFile.data, fixedFileName, audioFile.mimetype);
+        res.status(200).json({ publicUrl });
+    } catch (error) {
+        console.error('Error uploading audio:', error);
+        res.status(500).send('Error uploading audio.');
     }
 });
 

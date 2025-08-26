@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, Mic, Upload, Crown } from "lucide-react";
 import { useAudioRecorder } from "../hooks/useAudioRecorder";
+import { auth } from '../firebase'; // Import auth
 
 interface User {
   id: string;
@@ -94,60 +95,93 @@ export default function AudioPlayer({
   const processedAudioBlobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (audioBlobUrl && audioBlobUrl !== processedAudioBlobUrlRef.current) {
-      processedAudioBlobUrlRef.current = audioBlobUrl;
-      const isCurrentUserReigning = currentGameState.currentUserId === currentUser.id;
+    const uploadAudio = async () => {
+      if (audioBlobUrl && audioBlobUrl !== processedAudioBlobUrlRef.current) {
+        processedAudioBlobUrlRef.current = audioBlobUrl;
 
-      let dethronedUser = null;
-      if (!isCurrentUserReigning) {
-        const reigningPlayerInState = findReigningUser();
+        try {
+          const audioBlob = await fetch(audioBlobUrl).then(r => r.blob());
+          const formData = new FormData();
+          // Use a fixed filename for the server to overwrite
+          formData.append('audioFile', audioBlob, 'king_of_audio.webm'); 
 
-        if (reigningPlayerInState) {
-          dethronedUser = reigningPlayerInState;
-          dethroneUser(reigningPlayerInState.id);
+          const idToken = await auth.currentUser?.getIdToken();
+
+          const response = await fetch('http://localhost:5000/api/upload-audio', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const publicAudioUrl = data.publicUrl; // Get the public URL from the server
+
+          const isCurrentUserReigning = currentGameState.currentUserId === currentUser.id;
+
+          let dethronedUser = null;
+          if (!isCurrentUserReigning) {
+            const reigningPlayerInState = findReigningUser();
+
+            if (reigningPlayerInState) {
+              dethronedUser = reigningPlayerInState;
+              dethroneUser(reigningPlayerInState.id);
+            }
+          }
+
+          // Use the publicAudioUrl here
+          updateUserClipAndReign(currentUser.id, publicAudioUrl, Date.now());
+
+          let newActivityEvents = [];
+          if (dethronedUser) {
+            const now = Date.now();
+            newActivityEvents.push({
+              id: `event_${now}_dethroned`,
+              type: "dethroned",
+              userId: currentUser.id,
+              targetUserId: dethronedUser.id,
+              timestamp: now,
+            });
+          } else {
+            newActivityEvents.push({
+              id: `event_${Date.now()}`,
+              type: "upload",
+              userId: currentUser.id,
+              timestamp: Date.now(),
+            });
+          }
+
+          newActivityEvents.forEach(event => {
+            onNewActivityEvent(event);
+            console.log(`Added new '${event.type}' event to mockActivityFeed via prop.`);
+          });
+
+          setReigningPlayer(prevPlayer => {
+            if (prevPlayer) {
+              return { ...prevPlayer, currentClipUrl: publicAudioUrl }; // Update with public URL
+            }
+            return null;
+          });
+
+          if (isPlaying && audioRef.current) {
+            audioRef.current.src = publicAudioUrl; // Play the public URL
+            audioRef.current.onloadeddata = () => {
+              audioRef.current?.play().catch(e => console.error("Error playing new audio:", e));
+            };
+          }
+        } catch (error) {
+          console.error("Error uploading audio:", error);
+          // Handle error, e.g., show a toast notification
         }
       }
+    };
 
-      updateUserClipAndReign(currentUser.id, audioBlobUrl, Date.now());
-
-      let newActivityEvents = [];
-      if (dethronedUser) {
-        const now = Date.now();
-        newActivityEvents.push({
-          id: `event_${now}_dethroned`,
-          type: "dethroned",
-          userId: currentUser.id,
-          targetUserId: dethronedUser.id,
-          timestamp: now,
-        });
-      } else {
-        newActivityEvents.push({
-          id: `event_${Date.now()}`,
-          type: "upload",
-          userId: currentUser.id,
-          timestamp: Date.now(),
-        });
-      }
-
-      newActivityEvents.forEach(event => {
-        onNewActivityEvent(event);
-        console.log(`Added new '${event.type}' event to mockActivityFeed via prop.`);
-      });
-
-      setReigningPlayer(prevPlayer => {
-        if (prevPlayer) {
-          return { ...prevPlayer, currentClipUrl: audioBlobUrl };
-        }
-        return null;
-      });
-
-      if (isPlaying && audioRef.current) {
-        audioRef.current.src = audioBlobUrl;
-        audioRef.current.onloadeddata = () => {
-          audioRef.current?.play().catch(e => console.error("Error playing new audio:", e));
-        };
-      }
-    }
+    uploadAudio();
   }, [audioBlobUrl, onNewActivityEvent, currentUser, currentGameState, dethroneUser, findReigningUser, updateUserClipAndReign, isPlaying]);
 
   useEffect(() => {
@@ -359,7 +393,7 @@ export default function AudioPlayer({
     <Card className={`p-8 bg-gradient-player border-border shadow-card ${
       isRecording ? 'glowing-border-recording' : isPlaying ? 'glowing-border-playing' : 'glowing-border'
     }`}>
-      <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
+      <audio ref={audioRef} onEnded={() => setIsPlaying(false)} crossOrigin="anonymous" />
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
           {/* <Crown className="h-5 w-5 text-crown animate-pulse-glow" /> */}
