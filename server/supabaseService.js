@@ -44,18 +44,21 @@ export async function addNewUserToSupabase(id, username, avatarUrl) {
 
     if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
         console.error('Error checking for existing user in Supabase:', fetchError);
-        return null;
+        return { user: null, created: false }; // Return null user and false for created on error
     }
 
     if (existingUser) {
         console.log('User already exists, returning existing user data.');
         return {
-            id: existingUser.id,
-            username: existingUser.username,
-            avatarUrl: existingUser.avatar_url,
-            totalTimeHeld: existingUser.total_time_held,
-            currentClipUrl: existingUser.current_clip_url,
-            currentReignStart: existingUser.current_reign_start ? new Date(existingUser.current_reign_start).getTime() : null,
+            user: {
+                id: existingUser.id,
+                username: existingUser.username,
+                avatarUrl: existingUser.avatar_url,
+                totalTimeHeld: existingUser.total_time_held,
+                currentClipUrl: existingUser.current_clip_url,
+                currentReignStart: existingUser.current_reign_start ? new Date(existingUser.current_reign_start).getTime() : null,
+            },
+            created: false // User already existed
         };
     }
 
@@ -76,9 +79,9 @@ export async function addNewUserToSupabase(id, username, avatarUrl) {
 
     if (error) {
         console.error('Error adding new user to Supabase:', error);
-        return null;
+        return { user: null, created: false }; // Return null user and false for created on error
     }
-    return data[0]; // Return the newly inserted user
+    return { user: data[0], created: true }; // Return the newly inserted user and true for created
 }
 
 export async function updateUserClipAndReignInSupabase(userId, newClipUrl, newReignStart) {

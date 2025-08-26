@@ -124,21 +124,23 @@ app.post('/api/add-new-user', async (req, res) => {
         return res.status(400).json({ error: 'User ID, username, and avatar URL are required.' });
     }
     
-    const newUser = await addNewUserToSupabase(id, username, avatarUrl);
-    if (newUser) {
+    const { user: newUser, created } = await addNewUserToSupabase(id, username, avatarUrl);
+    if (newUser) { // Check if a user object was returned (either new or existing)
         const updatedUsers = await getUsersFromSupabase(); // Fetch updated list of users
         io.emit('usersUpdated', updatedUsers); // Broadcast updated users to all clients
-        // Add a 'join' activity event for the new user inside db
-        await addActivityEventToSupabase({
-            type: "join",
-            userId: id,
-            timestamp: Date.now(),
-        });
-        const updatedActivityFeed = await getActivityFeedFromSupabase();
-        io.emit('activityFeedUpdated', updatedActivityFeed); // Broadcast updated activity feed to every clients using sockets
+        
+        if (created) { // Only add 'join' event if a new user was created
+            await addActivityEventToSupabase({
+                type: "join",
+                userId: id,
+                timestamp: Date.now(),
+            });
+            const updatedActivityFeed = await getActivityFeedFromSupabase();
+            io.emit('activityFeedUpdated', updatedActivityFeed); // Broadcast updated activity feed to every clients using sockets
+        }
         res.status(201).json(newUser);
     } else {
-        res.status(200).json({ message: 'User already exists.' }); // User already in mockUsers
+        res.status(500).json({ message: 'Failed to add or retrieve user.' }); // Handle case where newUser is null (error in supabaseService)
     }
 });
 
