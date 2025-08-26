@@ -142,7 +142,7 @@ export default function AudioPlayer({
 
             if (reigningPlayerInState) {
               dethronedUser = reigningPlayerInState;
-              dethroneUser(reigningPlayerInState.id);
+              dethroneUser(dethronedUser.id); // Corrected: Pass dethronedUser.id
             }
           }
 
