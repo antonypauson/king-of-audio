@@ -241,38 +241,38 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
         <div className="container mx-auto px-6 py-8">
             <div className="grid grid-cols-3 gap-8 min-h-[calc(100vh-120px)]">
               {/* Left Sidebar Skeleton */}
-              <aside className="lg:col-span-1 space-y-4">
+              <aside className="lg:col-span-1 space-y-4 min-w-0">
                 <Skeleton className="h-8 w-3/4" /> {/* Title */}
                 <Skeleton className="h-40 w-full" /> {/* Activity Feed */}
                 <Skeleton className="h-20 w-full" />
               </aside>
 
               {/* Center - Audio Player Skeleton */}
-              <section className="lg:col-span-2 space-y-4">
+              <section className="lg:col-span-2 space-y-4 min-w-0">
                 <Skeleton className="h-12 w-full" /> {/* Audio Player controls */}
                 <Skeleton className="h-60 w-full" /> {/* Waveform/main area */}
                 <Skeleton className="h-24 w-full" /> {/* Other controls */}
               </section>
 
               {/* Right Sidebar - Leaderboard Skeleton */}
-              <aside className="lg:col-span-1 space-y-4">
+              <aside className="lg:col-span-1 space-y-4 min-w-0">
                 <Skeleton className="h-8 w-3/4" /> {/* Title */}
                 <Skeleton className="h-60 w-full" /> {/* Leaderboard */}
               </aside>
             </div>
           </div>
       ) : (
-        <main className={`container mx-auto px-6 py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
+        <main className={`mx-auto px-6 py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
           <div className="grid grid-cols-3 gap-8 min-h-[calc(100vh-120px)]">
             {/* Left Sidebar - Activity Feed */}
-            <aside className="col-span-1">
+            <aside className="col-span-1 min-w-0">
               <div className="sticky top-32">
                 <ActivityFeed activityFeed={activityFeed} users={users} />
               </div>
             </aside>
 
             {/* Center - Audio Player */}
-            <section className="col-span-1">
+            <section className="col-span-1 min-w-0">
               <AudioPlayer //all the props inside AudioPlayer
                 onNewActivityEvent={handleNewActivityEvent}
                 updateUserClipAndReign={handleUpdateUserClipAndReign}
@@ -285,7 +285,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             </section>
 
             {/* Right Sidebar - Leaderboard */}
-            <aside className="col-span-1">
+            <aside className="col-span-1 min-w-0">
               <div className="sticky top-32">
                 <Leaderboard users={users} currentGameState={currentGameState} />
               </div>
