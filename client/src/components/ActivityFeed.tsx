@@ -71,7 +71,7 @@ export default function ActivityFeed({ activityFeed, users }: { activityFeed: Ac
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-6">
         <Timer className="h-5 w-5 text-primary" />
-        <h2 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <h2 className="text-base sm:text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
           Activity Feed
         </h2>
       </div>
@@ -95,11 +95,11 @@ export default function ActivityFeed({ activityFeed, users }: { activityFeed: Ac
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       {getActivityIcon(event.type)}
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-xs sm:text-sm font-medium text-foreground">
                         {user.username}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                       {formatActivity(event, usersMap)}
                     </p>
                   </div>

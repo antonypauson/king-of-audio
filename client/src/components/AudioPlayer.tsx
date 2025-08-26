@@ -383,7 +383,7 @@ export default function AudioPlayer({
 
   if (!reigningPlayer) {
     return (
-      <Card className="p-8 bg-gradient-player border-border shadow-card text-center">
+      <Card className="p-4 sm:p-6 lg:p-8 bg-gradient-player border-border shadow-card text-center">
         <h3 className="text-2xl font-bold text-foreground mb-4">No King of Audio Yet!</h3>
         <p className="text-muted-foreground mb-6">Be the first to upload an audio clip and claim the crown.</p>
         <Button
@@ -404,11 +404,11 @@ export default function AudioPlayer({
   }
 
   return (
-    <Card className={`p-8 bg-gradient-player border-border shadow-card ${
+    <Card className={`p-4 sm:p-6 lg:p-8 bg-gradient-player border-border shadow-card ${
       isRecording ? 'glowing-border-recording' : isPlaying ? 'glowing-border-playing' : 'glowing-border'
     }`}>
       <audio ref={audioRef} onEnded={() => setIsPlaying(false)} crossOrigin="anonymous" />
-      <div className="text-center mb-6">
+      <div className="text-center mb-4 sm:mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
           {/* <Crown className="h-5 w-5 text-crown animate-pulse-glow" /> */}
           <Crown className="h-8 w-8 text-crown drop-shadow-lg" />

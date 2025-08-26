@@ -205,7 +205,7 @@ All colors MUST be HSL.
 }
 /* SimpleBar Direct Styling */
 .simplebar-track.simplebar-vertical {
-  background: hsl(var(--primary-foreground)); /* Track color */
+  background: hsl(240 5% 15%); /* Subtle gray track color */
 }
 
 .simplebar-scrollbar::before {

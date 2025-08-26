@@ -263,7 +263,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
           </div>
       ) : (
         <main className={`mx-auto px-2 lg:px-6 py-2 lg:py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-8">
             {/* Center - Audio Player */}
             <section className="col-span-2 lg:col-span-2 min-w-0 p-2 mb-4">
               <AudioPlayer //all the props inside AudioPlayer

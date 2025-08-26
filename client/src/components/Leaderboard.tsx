@@ -59,43 +59,37 @@ export default function Leaderboard({ users, currentGameState }: LeaderboardProp
     <div className="space-y-4">
       <div className="flex items-center justify-start gap-2 mb-6">
         <Trophy className="h-5 w-5 text-primary" />
-        <h2 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <h2 className="text-base sm:text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
           Leaderboard
         </h2>
       </div>
       
       <Flipper flipKey={JSON.stringify(users.map(u => u.id + '-' + u.totalTimeHeld))} spring="gentle" staggerConfig={{ default: { speed: 0.9 } }}>
-        <div className="space-y-2">
+        <div className="space-y-1">
           {players.map((player) => (
             <Flipped key={player.id} flipId={player.id} shouldFlip={() => true}>
               <Card
-                className={`w-full overflow-hidden p-2 transition-all duration-300 ${getRankStyle(player.rank, player.isCurrentReigning)}`}
+                className={`w-full overflow-hidden p-2 md:p-3 transition-all duration-300 ${getRankStyle(player.rank, player.isCurrentReigning)} flex flex-col`}
               >
-                <div className="flex items-center gap-2">
+                {/* Responsive Layout for Leaderboard Card */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                   <div className="flex items-center gap-2">
                     {getRankIcon(player.rank, player.isCurrentReigning)}
-                    <span className="text-sm font-bold text-muted-foreground">
+                    <span className="text-xs sm:text-sm font-bold text-muted-foreground">
                       {player.rank}
+                    </span>
+                    <Avatar className={`h-6 w-6 ${player.isCurrentReigning ? 'border-2 border-crown animate-reign-pulse' : ''}`}>
+                      <AvatarImage src={player.avatarUrl} />
+                    </Avatar>
+                    <span className="text-xs sm:text-sm font-medium text-foreground truncate">
+                      {player.name}
                     </span>
                   </div>
 
-                  <Avatar className={`h-8 w-8 ${player.isCurrentReigning ? 'border-2 border-crown animate-reign-pulse' : ''}`}>
-                    <AvatarImage src={player.avatarUrl} />
-                  </Avatar>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-foreground truncate mb-0.5">
-                        {player.name}
-                      </span>
-
-                    </div>
-                  </div>
-
-                  <div className="text-right min-w-0">
+                  <div className="flex justify-center sm:justify-end min-w-0">
                     <Badge
                       variant="secondary"
-                      className={`text-xs px-1 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis ${player.rank === 1 ? "bg-crown text-background" : ""}`}
+                      className={`text-xs px-0.5 py-0 whitespace-nowrap overflow-hidden text-ellipsis ${player.rank === 1 ? "bg-crown text-background" : ""}`}
                     >
                       {formatTime(player.totalTimeHeld)}
                     </Badge>
