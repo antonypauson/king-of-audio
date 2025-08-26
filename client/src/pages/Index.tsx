@@ -141,10 +141,15 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
           gameStateRes.json(),
           activityFeedRes.json(),
         ]);
+        console.log("Index.tsx: Initial fetch - usersData:", usersData);
+        console.log("Index.tsx: Initial fetch - gameStateData:", gameStateData);
+        console.log("Index.tsx: Initial fetch - activityFeedData:", activityFeedData);
 
         setUsers(usersData);
         setCurrentGameState(gameStateData);
         setActivityFeed(activityFeedData);
+        console.log("Index.tsx: State updated - users:", users);
+        console.log("Index.tsx: State updated - currentGameState:", currentGameState);
         // setCurrentUser is now handled by firebaseUser directly or derived from usersData
 
         // Check if Firebase user has a display name

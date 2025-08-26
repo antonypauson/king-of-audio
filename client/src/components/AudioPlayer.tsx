@@ -76,6 +76,17 @@ export default function AudioPlayer({
     }
   }, [currentGameState, users]);
 
+  // New useEffect to update audio source when reigningPlayer.currentClipUrl changes
+  useEffect(() => {
+    if (audioRef.current && reigningPlayer?.currentClipUrl) {
+      const urlWithCacheBuster = `${reigningPlayer.currentClipUrl}?t=${Date.now()}`;
+      console.log("AudioPlayer.tsx: Updating audioRef.current.src to:", urlWithCacheBuster);
+      audioRef.current.src = urlWithCacheBuster;
+    } else {
+        console.log("AudioPlayer.tsx: audioRef.current or reigningPlayer?.currentClipUrl is not ready.");
+    }
+  }, [reigningPlayer?.currentClipUrl]); // Removed isPlaying from dependencies as it's no longer used for playback here
+
   useEffect(() => {
     if (!reigningPlayer) return;
 
@@ -121,6 +132,7 @@ export default function AudioPlayer({
 
           const data = await response.json();
           const publicAudioUrl = data.publicUrl; // Get the public URL from the server
+          console.log("AudioPlayer.tsx: Upload successful, publicAudioUrl:", publicAudioUrl);
 
           const isCurrentUserReigning = currentGameState.currentUserId === currentUser.id;
 
@@ -358,7 +370,9 @@ export default function AudioPlayer({
           return; // Exit to let useEffect handle the play
         }
         // If not recording, proceed to play current clip
-        audioRef.current.src = reigningPlayer.currentClipUrl; // Set src to currentClipUrl
+        const urlWithCacheBuster = `${reigningPlayer.currentClipUrl}?t=${Date.now()}`;
+        console.log("AudioPlayer.tsx: togglePlay - setting audioRef.current.src to:", urlWithCacheBuster);
+        audioRef.current.src = urlWithCacheBuster; // Set src to currentClipUrl
         audioRef.current.onloadeddata = () => {
           audioRef.current?.play().catch(e => console.error("Error playing audio:", e));
         };
