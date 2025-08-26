@@ -3,10 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth"; // Import the Auth component
-import { useState, useEffect } from "react"; // Import useState and useEffect
+import React, { useState, useEffect, Suspense } from "react"; // Added Suspense
+const Index = React.lazy(() => import("./pages/Index")); // Lazy loaded
+const NotFound = React.lazy(() => import("./pages/NotFound")); // Lazy loaded
+const Auth = React.lazy(() => import("./pages/Auth")); // Lazy loaded
 import { auth } from './firebase'; // Import auth from your firebase.ts
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -41,14 +41,21 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           {authCheckComplete ? (
-            <Routes>
-              {isAuthenticated ? (
-                <Route path="/" element={<Index />} />
-              ) : (
-                <Route path="/" element={<Auth />} />
-              )}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={
+              <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
+                <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-primary"></div>
+                <span className="sr-only">Loading content...</span>
+              </div>
+            }>
+              <Routes>
+                {isAuthenticated ? (
+                  <Route path="/" element={<Index />} />
+                ) : (
+                  <Route path="/" element={<Auth />} />
+                )}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           ) : (
             // Optional: A simple loading spinner or null while auth check is in progress
             <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
