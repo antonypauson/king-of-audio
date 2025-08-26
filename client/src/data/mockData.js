@@ -176,33 +176,32 @@ export function formatActivity(event, usersMap) {
   const user = usersMap[event.userId];
   const targetUser = event.targetUserId ? usersMap[event.targetUserId] : null;
 
-  let timeAgoString;
-  if (secondsAgo < 60) {
-    timeAgoString = `${secondsAgo}s ago`;
-  } else if (secondsAgo < 3600) { // Less than 1 hour
+  let timeAgoString = ''; // Default to empty string
+
+  if (secondsAgo >= 60 && secondsAgo < 3600) { // Minutes
     const minutes = Math.floor(secondsAgo / 60);
     timeAgoString = `${minutes}m ago`;
-  } else if (secondsAgo < 86400) { // Less than 1 day
+  } else if (secondsAgo >= 3600 && secondsAgo < 86400) { // Hours
     const hours = Math.floor(secondsAgo / 3600);
     timeAgoString = `${hours}h ago`;
-  } else {
+  } else if (secondsAgo >= 86400) { // Days
     const days = Math.floor(secondsAgo / 86400);
     timeAgoString = `${days}d ago`;
   }
 
   switch (event.type) {
     case "takeover":
-      return `${user.username} took over ${targetUser.username} (${timeAgoString})`;
+      return `${user.username} took over ${targetUser.username} ${timeAgoString ? `(${timeAgoString})` : ''}`;
     case "dethroned":
-      return `${user.username} dethroned ${targetUser.username} (${timeAgoString})`;
+      return `${user.username} dethroned ${targetUser.username} ${timeAgoString ? `(${timeAgoString})` : ''}`;
     case "upload":
-      return `${user.username} uploaded a new audio (${timeAgoString})`;
+      return `${user.username} uploaded a new audio ${timeAgoString ? `(${timeAgoString})` : ''}`;
     case "failed":
-      return `${user.username} tried to take over ${targetUser.username} but failed (${timeAgoString})`;
+      return `${user.username} tried to take over ${targetUser.username} but failed ${timeAgoString ? `(${timeAgoString})` : ''}`;
     case "join": // New join event
-      return `${user.username} entered the arena (${timeAgoString})`;
+      return `${user.username} entered the arena ${timeAgoString ? `(${timeAgoString})` : ''}`;
     default:
-      return `${user.username} did something (${timeAgoString})`;
+      return `${user.username} did something ${timeAgoString ? `(${timeAgoString})` : ''}`;
   }
 }
 
