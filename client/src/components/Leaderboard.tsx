@@ -57,7 +57,7 @@ export default function Leaderboard({ users, currentGameState }: LeaderboardProp
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center justify-start gap-2 mb-6">
         <Trophy className="h-5 w-5 text-primary" />
         <h2 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
           Leaderboard

@@ -137,6 +137,12 @@ All colors MUST be HSL.
     box-shadow: 0 0 25px hsl(var(--neon-purple) / 1), inset 0 0 25px hsl(var(--neon-purple) / 1);
   }
 
+  @media (max-width: 767px) { /* For screens smaller than 'md' breakpoint */
+    .glowing-border:hover {
+      box-shadow: 0 0 15px hsl(var(--neon-purple) / 0.7), inset 0 0 15px hsl(var(--neon-purple) / 0.7); /* Same as non-hover state */
+    }
+  }
+
   .glowing-border-recording {
     border: 2px solid hsl(0 84% 60%); /* Red color for recording */
     box-shadow: 0 0 15px hsl(0 84% 60% / 0.7), inset 0 0 15px hsl(0 84% 60% / 0.7);

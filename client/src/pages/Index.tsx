@@ -262,10 +262,10 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             </div>
           </div>
       ) : (
-        <main className={`mx-auto px-2 lg:px-6 py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 min-h-[calc(100vh-120px)]">
+        <main className={`mx-auto px-2 lg:px-6 py-2 lg:py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Center - Audio Player */}
-            <section className="col-span-2 lg:col-span-2 min-w-0">
+            <section className="col-span-2 lg:col-span-2 min-w-0 p-2 mb-4">
               <AudioPlayer //all the props inside AudioPlayer
                 onNewActivityEvent={handleNewActivityEvent}
                 updateUserClipAndReign={handleUpdateUserClipAndReign}
@@ -279,14 +279,14 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
 
             {/* Right Sidebar - Leaderboard */}
             <aside className="col-span-1 lg:col-span-1 min-w-0">
-              <div className="sticky top-32">
+              <div>
                 <Leaderboard users={users} currentGameState={currentGameState} />
               </div>
             </aside>
 
             {/* Left Sidebar - Activity Feed */}
             <aside className="col-span-1 lg:col-span-1 min-w-0">
-              <div className="sticky top-32">
+              <div>
                 <ActivityFeed activityFeed={activityFeed} users={users} />
               </div>
             </aside>
