@@ -207,12 +207,18 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 ${showUsernameModal ? 'blur-sm' : ''}`}>
+      <header
+        className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 ${
+          showUsernameModal ? "blur-sm" : ""
+        }`}
+      >
         <div className="container mx-auto px-6 py-2 lg:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-base sm:text-lg">👑</span>
+                <span className="text-primary-foreground font-bold text-base sm:text-lg">
+                  👑
+                </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 King of Audio
@@ -239,30 +245,34 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
 
       {isLoading ? ( // loading message/animation
         <div className="container mx-auto px-6 py-8">
-            <div className="grid grid-cols-3 gap-8 min-h-[calc(100vh-120px)]">
-              {/* Left Sidebar Skeleton */}
-              <aside className="lg:col-span-1 space-y-4 min-w-0">
-                <Skeleton className="h-8 w-3/4" /> {/* Title */}
-                <Skeleton className="h-40 w-full" /> {/* Activity Feed */}
-                <Skeleton className="h-20 w-full" />
-              </aside>
+          <div className="grid grid-cols-3 gap-8 min-h-[calc(100vh-120px)]">
+            {/* Left Sidebar Skeleton */}
+            <aside className="lg:col-span-1 space-y-4 min-w-0">
+              <Skeleton className="h-8 w-3/4" /> {/* Title */}
+              <Skeleton className="h-40 w-full" /> {/* Activity Feed */}
+              <Skeleton className="h-20 w-full" />
+            </aside>
 
-              {/* Center - Audio Player Skeleton */}
-              <section className="lg:col-span-2 space-y-4 min-w-0">
-                <Skeleton className="h-12 w-full" /> {/* Audio Player controls */}
-                <Skeleton className="h-60 w-full" /> {/* Waveform/main area */}
-                <Skeleton className="h-24 w-full" /> {/* Other controls */}
-              </section>
+            {/* Center - Audio Player Skeleton */}
+            <section className="lg:col-span-2 space-y-4 min-w-0">
+              <Skeleton className="h-12 w-full" /> {/* Audio Player controls */}
+              <Skeleton className="h-60 w-full" /> {/* Waveform/main area */}
+              <Skeleton className="h-24 w-full" /> {/* Other controls */}
+            </section>
 
-              {/* Right Sidebar - Leaderboard Skeleton */}
-              <aside className="lg:col-span-1 space-y-4 min-w-0">
-                <Skeleton className="h-8 w-3/4" /> {/* Title */}
-                <Skeleton className="h-60 w-full" /> {/* Leaderboard */}
-              </aside>
-            </div>
+            {/* Right Sidebar - Leaderboard Skeleton */}
+            <aside className="lg:col-span-1 space-y-4 min-w-0">
+              <Skeleton className="h-8 w-3/4" /> {/* Title */}
+              <Skeleton className="h-60 w-full" /> {/* Leaderboard */}
+            </aside>
           </div>
+        </div>
       ) : (
-        <main className={`mx-auto px-2 lg:px-6 py-2 lg:py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
+        <main
+          className={`mx-auto px-2 lg:px-6 py-2 lg:py-8 ${
+            showUsernameModal ? "blur-sm" : ""
+          }`}
+        >
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-8">
             {/* Center - Audio Player */}
             <section className="col-span-2 lg:col-span-2 min-w-0 p-2 mb-4">
@@ -280,7 +290,10 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             {/* Right Sidebar - Leaderboard */}
             <aside className="col-span-1 lg:col-span-1 min-w-0">
               <div>
-                <Leaderboard users={users} currentGameState={currentGameState} />
+                <Leaderboard
+                  users={users}
+                  currentGameState={currentGameState}
+                />
               </div>
             </aside>
 
@@ -295,8 +308,26 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
       )}
 
       {showUsernameModal && auth.currentUser && (
-        <UsernameModal user={auth.currentUser} onUsernameSet={handleUsernameSet} />
+        <UsernameModal
+          user={auth.currentUser}
+          onUsernameSet={handleUsernameSet}
+        />
       )}
+
+      {/* Footer for Bug Reports */}
+      <footer className="py-4 text-center">
+        <p className="text-xs text-muted-foreground">
+          Suggest bugs and errors on{" "}
+          <a
+            href="https://github.com/antonypauson/king-of-audio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neon-blue underline"
+          >
+            here
+          </a>
+        </p>
+      </footer>
     </div>
   );
 };
