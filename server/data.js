@@ -1,4 +1,6 @@
+/*
 // server/data.js
+// commented out since we have migrated to db
 
 // ---------------------------
 // Users (latest clip + cumulative time)
@@ -235,3 +237,4 @@ export function addNewUser(id, username, avatarUrl) {
 //   acc[user.id] = user;
 //   return acc;
 // }, {});
+*/

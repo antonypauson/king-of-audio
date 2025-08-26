@@ -28,6 +28,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     const user = auth.currentUser;
     if (user) {
       const idToken = await user.getIdToken();
+      console.log("Firebase token: ", idToken);
       return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`,

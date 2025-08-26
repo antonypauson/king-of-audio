@@ -5,7 +5,7 @@ import cors from 'cors';
 // import { mockCurrentGameState, mockActivityFeed, updateMockUserClipAndReign, findReigningUser, dethroneUser, addActivityEvent, incrementReigningUserTotalTime, isUsernameUnique, addNewUser } from './data.js'; //importing all the mockData and helper functions
 import dotenv from "dotenv"; 
 dotenv.config(); 
-import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase, findReigningUserInSupabase } from './supabaseService.js';
+import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase, updateUserClipAndReignInSupabase, dethroneUserInSupabase, findReigningUserInSupabase, getGameStateFromSupabase, getActivityFeedFromSupabase, addActivityEventToSupabase, incrementReigningUserTotalTimeInSupabase} from './supabaseService.js';
 import { createClient } from '@supabase/supabase-js';
 import admin from 'firebase-admin'; //firebase admin sdk
 import { createRequire } from 'module';
@@ -89,15 +89,16 @@ app.get('/api/users', async (req, res) => {
     res.json(users);
 });
 
-// app.get('/api/current-game-state', (req, res) => {
-//     res.json(mockCurrentGameState);
-// }); 
-//we dont need this endpoint anymore, as we are taking current game state from our db. 
+app.get('/api/current-game-state', async (req, res) => {
+    const gameState = await getGameStateFromSupabase();
+    res.json(gameState);
+}); 
 
-// app.get('/api/activity-feed', (req, res) => {
-//     res.json(mockActivityFeed);
-// });
-//dont need this endpoint anymore, as we are taking activity feed from our db table
+
+app.get('/api/activity-feed', async (req, res) => {
+    const activityFeed = await getActivityFeedFromSupabase(); //from the db
+    res.json(activityFeed);
+});
 
 // app.get('/api/current-user', (req, res) => {
 //     res.json(mockCurrentUser); //we dont get current user from mockData anymore
@@ -127,14 +128,14 @@ app.post('/api/add-new-user', async (req, res) => {
     if (newUser) {
         const updatedUsers = await getUsersFromSupabase(); // Fetch updated list of users
         io.emit('usersUpdated', updatedUsers); // Broadcast updated users to all clients
-        // Add a 'join' activity event for the new user
-        addActivityEvent({
-            id: `event_${Date.now()}_join_${id}`,
+        // Add a 'join' activity event for the new user inside db
+        await addActivityEventToSupabase({
             type: "join",
             userId: id,
             timestamp: Date.now(),
         });
-        io.emit('activityFeedUpdated', mockActivityFeed); // Broadcast updated activity feed
+        const updatedActivityFeed = await getActivityFeedFromSupabase();
+        io.emit('activityFeedUpdated', updatedActivityFeed); // Broadcast updated activity feed to every clients using sockets
         res.status(201).json(newUser);
     } else {
         res.status(200).json({ message: 'User already exists.' }); // User already in mockUsers
@@ -177,8 +178,9 @@ io.on('connection', async (socket) => { //socket represents only one specific cl
         console.log('Processing addActivity event:', event);
         // Ensure the userId in the event is the verified socket.uid
         const verifiedEvent = { ...event, userId: socket.uid };
-        addActivityEvent(verifiedEvent); // Update the data inside 'data.js' file using this helper function
-        io.emit('activityFeedUpdated', mockActivityFeed); // we are emitting this 'activityFeedUpdated' and updated 'mockActivityFeed'  to all clients, not just our single client
+        await addActivityEventToSupabase(verifiedEvent); // Update the activity event inside db
+        const updatedActivityFeed = await getActivityFeedFromSupabase();// get from activity_feed table inside db
+        io.emit('activityFeedUpdated', updatedActivityFeed); // we are emitting this 'activityFeedUpdated' and updated 'mockActivityFeed'  to all clients, not just our single client
     });
 
     //updateUserClipAndReign event from client
