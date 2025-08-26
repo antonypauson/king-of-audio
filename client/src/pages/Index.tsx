@@ -3,6 +3,7 @@ import ActivityFeed from "@/components/ActivityFeed";
 import AudioPlayer from "@/components/AudioPlayer";
 import Leaderboard from "@/components/Leaderboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { io } from 'socket.io-client'; // socket.io-client
 import UsernameModal from '@/components/UsernameModal'; // Import UsernameModal
 import { auth } from '../firebase'; // Import auth from firebase.ts
@@ -237,9 +238,29 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
       </header>
 
       {isLoading ? ( // loading message/animation
-        <div className="flex justify-center items-center min-h-[calc(100vh-80px)] text-lg text-muted-foreground">
-          Loading data... need to add skeleton or loading animation here
-        </div>
+        <div className="container mx-auto px-6 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[calc(100vh-120px)]">
+              {/* Left Sidebar Skeleton */}
+              <aside className="lg:col-span-1 space-y-4">
+                <Skeleton className="h-8 w-3/4" /> {/* Title */}
+                <Skeleton className="h-40 w-full" /> {/* Activity Feed */}
+                <Skeleton className="h-20 w-full" />
+              </aside>
+
+              {/* Center - Audio Player Skeleton */}
+              <section className="lg:col-span-2 space-y-4">
+                <Skeleton className="h-12 w-full" /> {/* Audio Player controls */}
+                <Skeleton className="h-60 w-full" /> {/* Waveform/main area */}
+                <Skeleton className="h-24 w-full" /> {/* Other controls */}
+              </section>
+
+              {/* Right Sidebar - Leaderboard Skeleton */}
+              <aside className="lg:col-span-1 space-y-4">
+                <Skeleton className="h-8 w-3/4" /> {/* Title */}
+                <Skeleton className="h-60 w-full" /> {/* Leaderboard */}
+              </aside>
+            </div>
+          </div>
       ) : (
         <main className={`container mx-auto px-6 py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[calc(100vh-120px)]">
