@@ -6,6 +6,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatTime(totalSeconds: number): string {
+  if (totalSeconds === 0) {
+    return "0s";
+  }
+
   const days = Math.floor(totalSeconds / (60 * 60 * 24));
   totalSeconds %= (60 * 60 * 24);
   const hours = Math.floor(totalSeconds / (60 * 60));
@@ -14,16 +18,23 @@ export function formatTime(totalSeconds: number): string {
   const seconds = totalSeconds % 60;
 
   let parts: string[] = [];
+
   if (days > 0) {
     parts.push(`${days}d`);
-  }
-  if (hours > 0) {
+    if (hours > 0 && parts.length < 2) { // Add hours if available and less than 2 parts
+      parts.push(`${hours}h`);
+    }
+  } else if (hours > 0) {
     parts.push(`${hours}h`);
-  }
-  if (minutes > 0) {
+    if (minutes > 0 && parts.length < 2) { // Add minutes if available and less than 2 parts
+      parts.push(`${minutes}m`);
+    }
+  } else if (minutes > 0) {
     parts.push(`${minutes}m`);
-  }
-  if (seconds > 0 || parts.length === 0) { // Ensure seconds are always shown if no other parts, or if seconds are > 0
+    if (seconds > 0 && parts.length < 2) { // Add seconds if available and less than 2 parts
+      parts.push(`${seconds}s`);
+    }
+  } else if (seconds > 0) {
     parts.push(`${seconds}s`);
   }
 

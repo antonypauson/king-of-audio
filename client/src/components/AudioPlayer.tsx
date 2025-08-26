@@ -438,11 +438,11 @@ export default function AudioPlayer({
       <canvas ref={canvasRef} className="w-full h-16 mb-8"></canvas>
 
       {/* Play Controls and Record/Upload Actions */}
-      <div className="flex gap-3 justify-center mb-8">
+      <div className="flex flex-wrap gap-3 justify-center mb-8">
         <Button
           size="lg"
           onClick={togglePlay}
-          className="w-[180px] bg-gradient-primary hover:scale-105 transition-transform shadow-glow-primary"
+          className="flex-1 bg-gradient-primary hover:scale-105 transition-transform shadow-glow-primary"
         >
           {isPlaying ? (
             <Pause className="h-6 w-6 mr-2" />
@@ -465,7 +465,7 @@ export default function AudioPlayer({
               startRecording();
             }
           }}
-          className={`w-[180px] transition-all duration-300 glow-primary ${
+          className={`flex-1 transition-all duration-300 glow-primary ${
             isRecording
               ? "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
               : "border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-background"

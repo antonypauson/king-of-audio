@@ -208,26 +208,26 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 ${showUsernameModal ? 'blur-sm' : ''}`}>
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-6 py-2 lg:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">🎵</span>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-base sm:text-lg">🎵</span>
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Audio Boy
               </h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {currentUserData && (
-                <div className="flex items-center gap-3 border border-primary rounded-sm px-3 py-1">
-                  <Avatar className="h-8 w-8 border-2 border-primary">
+                <div className="flex items-center gap-2 sm:gap-3 border border-primary rounded-sm px-2 py-0.5 sm:px-3 sm:py-1">
+                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border-2 border-primary">
                     <AvatarImage src={currentUserData.avatarUrl} />
                     <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
                       {currentUserData.username.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-base font-medium text-foreground">
+                  <span className="text-sm sm:text-base font-medium text-foreground">
                     {currentUserData.username}
                   </span>
                 </div>
@@ -262,17 +262,10 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             </div>
           </div>
       ) : (
-        <main className={`mx-auto px-6 py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
-          <div className="grid grid-cols-3 gap-8 min-h-[calc(100vh-120px)]">
-            {/* Left Sidebar - Activity Feed */}
-            <aside className="col-span-1 min-w-0">
-              <div className="sticky top-32">
-                <ActivityFeed activityFeed={activityFeed} users={users} />
-              </div>
-            </aside>
-
+        <main className={`mx-auto px-2 lg:px-6 py-8 ${showUsernameModal ? 'blur-sm' : ''}`}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 min-h-[calc(100vh-120px)]">
             {/* Center - Audio Player */}
-            <section className="col-span-1 min-w-0">
+            <section className="col-span-2 lg:col-span-2 min-w-0">
               <AudioPlayer //all the props inside AudioPlayer
                 onNewActivityEvent={handleNewActivityEvent}
                 updateUserClipAndReign={handleUpdateUserClipAndReign}
@@ -285,9 +278,16 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             </section>
 
             {/* Right Sidebar - Leaderboard */}
-            <aside className="col-span-1 min-w-0">
+            <aside className="col-span-1 lg:col-span-1 min-w-0">
               <div className="sticky top-32">
                 <Leaderboard users={users} currentGameState={currentGameState} />
+              </div>
+            </aside>
+
+            {/* Left Sidebar - Activity Feed */}
+            <aside className="col-span-1 lg:col-span-1 min-w-0">
+              <div className="sticky top-32">
+                <ActivityFeed activityFeed={activityFeed} users={users} />
               </div>
             </aside>
           </div>

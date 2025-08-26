@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.gemini
 client/notes.md
 client/error.txt
 server/notes.md
@@ -21,7 +22,6 @@ node_modules
 dist
 dist-ssr
 *.local
-progress
 
 # Editor directories and files
 .vscode/*

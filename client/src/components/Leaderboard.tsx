@@ -69,17 +69,17 @@ export default function Leaderboard({ users, currentGameState }: LeaderboardProp
           {players.map((player) => (
             <Flipped key={player.id} flipId={player.id} shouldFlip={() => true}>
               <Card
-                className={`p-3 transition-all duration-300 ${getRankStyle(player.rank, player.isCurrentReigning)}`}
+                className={`w-full overflow-hidden p-2 transition-all duration-300 ${getRankStyle(player.rank, player.isCurrentReigning)}`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 min-w-[2rem]">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     {getRankIcon(player.rank, player.isCurrentReigning)}
                     <span className="text-sm font-bold text-muted-foreground">
                       {player.rank}
                     </span>
                   </div>
 
-                  <Avatar className={`h-10 w-10 ${player.isCurrentReigning ? 'border-2 border-crown animate-reign-pulse' : ''}`}>
+                  <Avatar className={`h-8 w-8 ${player.isCurrentReigning ? 'border-2 border-crown animate-reign-pulse' : ''}`}>
                     <AvatarImage src={player.avatarUrl} />
                   </Avatar>
 
@@ -92,10 +92,10 @@ export default function Leaderboard({ users, currentGameState }: LeaderboardProp
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right min-w-0">
                     <Badge
                       variant="secondary"
-                      className={player.rank === 1 ? "bg-crown text-background" : ""}
+                      className={`text-xs px-1 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis ${player.rank === 1 ? "bg-crown text-background" : ""}`}
                     >
                       {formatTime(player.totalTimeHeld)}
                     </Badge>
