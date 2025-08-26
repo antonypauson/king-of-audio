@@ -16,6 +16,7 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAppLoading, setIsAppLoading] = useState(false); // New global loading state
+  const [authCheckComplete, setAuthCheckComplete] = useState(false); // New state for auth check completion
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -29,6 +30,7 @@ const App = () => {
         setIsAuthenticated(false);
       }
       setLoading(false);
+      setAuthCheckComplete(true); // Set to true after auth check is complete
     });
     return () => unsubscribe();
   }, []);
@@ -47,14 +49,22 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {isAuthenticated ? (
-              <Route path="/" element={<Index onDataLoaded={() => setIsAppLoading(false)} />} /> // Pass callback to Index
-            ) : (
-              <Route path="/" element={<Auth onLoginSuccess={handleLoginSuccess} />} />
-            )}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          {authCheckComplete ? (
+            <Routes>
+              {isAuthenticated ? (
+                <Route path="/" element={<Index onDataLoaded={() => setIsAppLoading(false)} />} /> // Pass callback to Index
+              ) : (
+                <Route path="/" element={<Auth onLoginSuccess={handleLoginSuccess} />} />
+              )}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          ) : (
+            // Optional: A simple loading spinner or null while auth check is in progress
+            <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
+              <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-primary"></div>
+              <span className="sr-only">Loading authentication...</span>
+            </div>
+          )}
         </BrowserRouter>
         {isAppLoading && (
           <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
