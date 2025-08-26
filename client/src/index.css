@@ -23,16 +23,12 @@ All colors MUST be HSL.
 
     --secondary: 240 6% 18%;
     --secondary-foreground: 220 15% 95%;
-
     --muted: 240 6% 15%;
     --muted-foreground: 220 10% 65%;
-
     --accent: 280 100% 70%;
     --accent-foreground: 240 10% 8%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 220 15% 95%;
-
     --border: 240 6% 20%;
     --input: 240 6% 15%;
     --ring: 270 100% 65%;
@@ -200,4 +196,29 @@ All colors MUST be HSL.
     box-shadow: 0 0 50px hsl(var(--reign-glow) / 1);
     transform: scale(1.02);
   }
+}
+/* SimpleBar Direct Styling */
+.simplebar-track.simplebar-vertical {
+  background: hsl(var(--primary-foreground)); /* Track color */
+}
+
+.simplebar-scrollbar::before {
+  background: hsl(var(--primary)); /* Thumb color */
+  opacity: 1; /* Ensure visibility */
+}
+
+.simplebar-scrollbar.simplebar-visible::before {
+  opacity: 1; /* Ensure visibility when visible */
+}
+
+.simplebar-scrollbar::before:hover {
+  background: hsl(var(--accent)); /* Thumb hover color */
+}
+/* SimpleBar RTL Support */
+[data-simplebar-direction="rtl"] .simplebar-wrapper {
+  direction: rtl;
+}
+
+[data-simplebar-direction="rtl"] .simplebar-content-wrapper {
+  direction: ltr; /* Ensure content is not mirrored */
 }

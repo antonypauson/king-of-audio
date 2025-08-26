@@ -3,6 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Mic, Timer, Trophy, XCircle, Swords, LogIn } from "lucide-react";
 
 import { usersMap as initialUsersMap, formatActivity } from "@/data/mockData"; 
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css'; 
 
 interface ActivityEvent {
   id: string;
@@ -74,37 +76,39 @@ export default function ActivityFeed({ activityFeed, users }: { activityFeed: Ac
         </h2>
       </div>
 
-      <div className="space-y-3">
-        {activities.map((event) => {
-          const user = usersMap[event.userId];
-          if (!user) return null; // Handle case where user might not be found
+      <SimpleBar style={{ maxHeight: 500 }} data-simplebar-direction="rtl">
+        <div className="space-y-3 pl-3">
+          {activities.map((event) => {
+            const user = usersMap[event.userId];
+            if (!user) return null; // Handle case where user might not be found
 
-          return (
-            <Card key={event.id} className={`p-3 transition-colors hover:bg-secondary/50 ${getActivityCardStyle(event.type)}`}>
-              <div className="flex items-start gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatarUrl} />
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
-                    {user.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+            return (
+              <Card key={event.id} className={`p-3 transition-colors hover:bg-secondary/50 ${getActivityCardStyle(event.type)}`}>
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatarUrl} />
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                      {user.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {getActivityIcon(event.type)}
-                    <span className="text-sm font-medium text-foreground">
-                      {user.username}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {getActivityIcon(event.type)}
+                      <span className="text-sm font-medium text-foreground">
+                        {user.username}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {formatActivity(event, usersMap)}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {formatActivity(event, usersMap)}
-                  </p>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      </SimpleBar>
     </div>
   );
 }
