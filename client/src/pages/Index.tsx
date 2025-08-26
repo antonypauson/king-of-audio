@@ -261,7 +261,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
             {/* Right Sidebar - Leaderboard */}
             <aside className="lg:col-span-1">
               <div className="sticky top-32">
-                <Leaderboard users={users} />
+                <Leaderboard users={users} currentGameState={currentGameState} />
               </div>
             </aside>
           </div>

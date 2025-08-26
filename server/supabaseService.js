@@ -35,6 +35,31 @@ export async function isUsernameUniqueInSupabase(usernameToCheck) {
 }
 
 export async function addNewUserToSupabase(id, username, avatarUrl) {
+    // First, check if the user already exists
+    const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('id, username, avatar_url, total_time_held, current_clip_url, current_reign_start')
+        .eq('id', id)
+        .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error('Error checking for existing user in Supabase:', fetchError);
+        return null;
+    }
+
+    if (existingUser) {
+        console.log('User already exists, returning existing user data.');
+        return {
+            id: existingUser.id,
+            username: existingUser.username,
+            avatarUrl: existingUser.avatar_url,
+            totalTimeHeld: existingUser.total_time_held,
+            currentClipUrl: existingUser.current_clip_url,
+            currentReignStart: existingUser.current_reign_start ? new Date(existingUser.current_reign_start).getTime() : null,
+        };
+    }
+
+    // If user does not exist, proceed with insertion
     const { data, error } = await supabase
         .from('users')
         .insert([

@@ -334,7 +334,25 @@ export default function AudioPlayer({
   };
 
   if (!reigningPlayer) {
-    return <div>Loading audio player...</div>; // Or a loading spinner
+    return (
+      <Card className="p-8 bg-gradient-player border-border shadow-card text-center">
+        <h3 className="text-2xl font-bold text-foreground mb-4">No King of Audio Yet!</h3>
+        <p className="text-muted-foreground mb-6">Be the first to upload an audio clip and claim the crown.</p>
+        <Button
+          size="lg"
+          onClick={() => {
+            // Logic to start recording or guide the user
+            // This might involve emitting a socket event or setting a state
+            // For now, just a placeholder
+            console.log("Prompting user to record audio...");
+          }}
+          className="w-[180px] bg-gradient-primary hover:scale-105 transition-transform shadow-glow-primary"
+        >
+          <Mic className="h-6 w-6 mr-2" />
+          Start Recording
+        </Button>
+      </Card>
+    );
   }
 
   return (

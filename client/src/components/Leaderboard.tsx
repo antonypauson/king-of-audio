@@ -13,13 +13,9 @@ interface User {
   currentReignStart: number | null;
 }
 
-interface Player {
-  id: string;
-  name: string;
-  avatarUrl: string;
-  totalTimeHeld: number;
-  isCurrentReigning: boolean;
-  rank: number;
+interface LeaderboardProps {
+  users: User[];
+  currentGameState: { currentUserId: string | null };
 }
 
 const getRankIcon = (rank: number, isCurrentReigning: boolean) => {
@@ -47,7 +43,7 @@ const getRankStyle = (rank: number, isCurrentReigning: boolean) => {
   return "bg-card border-border hover:bg-secondary/50";
 };
 
-export default function Leaderboard({ users }: { users: User[] }) {
+export default function Leaderboard({ users, currentGameState }: LeaderboardProps) {
   const players: Player[] = users
     .sort((a, b) => b.totalTimeHeld - a.totalTimeHeld)
     .map((user, index) => ({
@@ -55,7 +51,7 @@ export default function Leaderboard({ users }: { users: User[] }) {
       name: user.username,
       avatarUrl: user.avatarUrl,
       totalTimeHeld: user.totalTimeHeld,
-      isCurrentReigning: user.currentReignStart !== null,
+      isCurrentReigning: user.id === currentGameState.currentUserId, // <--- CHANGE THIS LINE
       rank: index + 1,
     }));
 
