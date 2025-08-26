@@ -10,8 +10,7 @@ import { getUsersFromSupabase, isUsernameUniqueInSupabase, addNewUserToSupabase,
 import { createClient } from '@supabase/supabase-js';
 import admin from 'firebase-admin'; //firebase admin sdk
 import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const serviceAccount = require('./serviceAccountKey.json');//contains firebase sensitive data for verifying the user's token id
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);//contains firebase sensitive data for verifying the user's token id
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -243,6 +242,6 @@ io.on('connection', async (socket) => { //socket represents only one specific cl
     });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
