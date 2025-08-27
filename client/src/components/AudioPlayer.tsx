@@ -85,6 +85,22 @@ export default function AudioPlayer({
     }
   }, [reigningPlayer?.currentClipUrl]); // Removed isPlaying from dependencies as it's no longer used for playback here
 
+  const initializeAudioContext = () => {
+    if (audioRef.current && !audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      
+      if (!sourceRef.current) {
+        sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+        sourceRef.current.connect(analyserRef.current);
+      }
+      
+      analyserRef.current.connect(audioContextRef.current.destination);
+      analyserRef.current.fftSize = 2048;
+      setIsAudioContextReady(true);
+    }
+  };
+
   useEffect(() => {
     if (!reigningPlayer) return;
 
@@ -201,34 +217,7 @@ export default function AudioPlayer({
     uploadAudio();
   }, [audioBlobUrl, onNewActivityEvent, currentUser, currentGameState, dethroneUser, updateUserClipAndReign, isPlaying, users]);
 
-  useEffect(() => {
-    // Initialize AudioContext and source node only once
-    // Ensure audioRef.current is available and AudioContext is not already created
-    if (audioRef.current && !audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      
-      // Only create MediaElementAudioSourceNode if it hasn't been created yet
-      if (!sourceRef.current) {
-        sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
-        sourceRef.current.connect(analyserRef.current);
-      }
-      
-      analyserRef.current.connect(audioContextRef.current.destination);
-      analyserRef.current.fftSize = 2048; // Adjust for desired detail
-      setIsAudioContextReady(true);
-    }
-
-    return () => {
-      // Clean up AudioContext on component unmount
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-        analyserRef.current = null;
-        sourceRef.current = null;
-      }
-    };
-  }, [audioRef.current]); // <--- Added audioRef.current to dependencies
+  
 
   useEffect(() => {
     if (!analyserRef.current || !audioContextRef.current) return;
@@ -362,6 +351,7 @@ export default function AudioPlayer({
   
 
   const togglePlay = async () => {
+    initializeAudioContext(); // Initialize AudioContext on user gesture
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
@@ -461,6 +451,7 @@ export default function AudioPlayer({
           variant="outline"
           size="lg"
           onClick={() => {
+            initializeAudioContext(); // Initialize AudioContext on user gesture
             if (isRecording) {
               stopRecording();
             } else {
