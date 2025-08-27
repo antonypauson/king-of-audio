@@ -361,27 +361,28 @@ export default function AudioPlayer({
 
   
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
-        setIsPlaying(false); // Explicitly set to false when pausing
+        setIsPlaying(false);
       } else {
         if (isRecording) {
-          stopRecording(); // This will eventually update audioBlobUrl
-          // DO NOT set src and play here immediately.
-          // The useEffect for audioBlobUrl will handle playing the new audio.
-          setIsPlaying(true); // Set isPlaying to true, so useEffect knows to play
-          return; // Exit to let useEffect handle the play
+          stopRecording();
+          setIsPlaying(true); 
+          return; 
         }
-        // If not recording, proceed to play current clip
-        const urlWithCacheBuster = `${reigningPlayer.currentClipUrl}?t=${Date.now()}`;
-        console.log("AudioPlayer.tsx: togglePlay - setting audioRef.current.src to:", urlWithCacheBuster);
-        audioRef.current.src = urlWithCacheBuster; // Set src to currentClipUrl
-        audioRef.current.onloadeddata = () => {
-          audioRef.current?.play().catch(e => console.error("Error playing audio:", e));
-        };
-        setIsPlaying(true);
+        try {
+          const urlWithCacheBuster = `${reigningPlayer.currentClipUrl}?t=${Date.now()}`;
+          console.log("AudioPlayer.tsx: togglePlay - setting audioRef.current.src to:", urlWithCacheBuster);
+          audioRef.current.src = urlWithCacheBuster;
+          audioRef.current.load(); // Explicitly load the audio
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (e) {
+          console.error("Error playing audio:", e);
+          setIsPlaying(false); // Reset playing state on error
+        }
       }
     }
   };
