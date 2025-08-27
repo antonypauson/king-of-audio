@@ -16,7 +16,7 @@ export const useAudioRecorder = (): AudioRecorderHook => {
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast(); // Initialize useToast
 
-  """  const startRecording = async () => {
+  const startRecording = async () => {
     console.log('useAudioRecorder: startRecording called');
     try {
       console.log('useAudioRecorder: Requesting microphone access...');
@@ -85,7 +85,7 @@ export const useAudioRecorder = (): AudioRecorderHook => {
       setIsRecording(false);
       mediaStreamRef.current?.getTracks().forEach(track => track.stop());
     }
-  };""
+  };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
