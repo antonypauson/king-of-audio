@@ -72,7 +72,7 @@ export default function Leaderboard({ users, currentGameState }: LeaderboardProp
                 className={`w-full overflow-hidden p-2 md:p-3 transition-all duration-300 ${getRankStyle(player.rank, player.isCurrentReigning)} flex flex-col`}
               >
                 {/* Responsive Layout for Leaderboard Card */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                <div className="hidden sm:flex sm:items-center justify-between gap-1 sm:gap-2">
                   <div className="flex items-center gap-2">
                     {getRankIcon(player.rank, player.isCurrentReigning)}
                     <span className="text-xs sm:text-sm font-bold text-muted-foreground">
@@ -87,6 +87,30 @@ export default function Leaderboard({ users, currentGameState }: LeaderboardProp
                   </div>
 
                   <div className="flex justify-center sm:justify-end min-w-0">
+                    <Badge
+                      variant="secondary"
+                      className={`text-xs px-0.5 py-0 whitespace-nowrap overflow-hidden text-ellipsis ${player.rank === 1 ? "bg-crown text-background" : ""}`}
+                    >
+                      {formatTime(player.totalTimeHeld)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Mobile Layout */}
+                <div className="flex flex-col sm:hidden">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {player.rank}
+                    </span>
+                    <Avatar className={`h-6 w-6 ${player.isCurrentReigning ? 'border-2 border-crown animate-reign-pulse' : ''}`}>
+                      <AvatarImage src={player.avatarUrl} />
+                    </Avatar>
+                    <span className="text-xs font-medium text-foreground truncate">
+                      {player.name}
+                    </span>
+                  </div>
+                  <div className="flex justify-start items-center mt-1 gap-1">
+                    {getRankIcon(player.rank, player.isCurrentReigning)}
                     <Badge
                       variant="secondary"
                       className={`text-xs px-0.5 py-0 whitespace-nowrap overflow-hidden text-ellipsis ${player.rank === 1 ? "bg-crown text-background" : ""}`}
