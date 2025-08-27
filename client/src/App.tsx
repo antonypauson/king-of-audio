@@ -39,6 +39,10 @@ const App = () => {
     setDataLoaded(true);
   };
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
