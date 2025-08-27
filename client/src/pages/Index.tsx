@@ -47,16 +47,16 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
         idToken = await user.getIdToken();
       }
 
-      socketRef.current = io("https://king-of-audio.onrender.com", {
+      socketRef.current = io("http://localhost:5000", {
         query: {
           token: idToken,
         },
       });
 
       socketRef.current.on('usersUpdated', (updatedUsers) => {
-        console.log("Index.tsx: Socket - usersUpdated received (count: " + updatedUsers.length + "):", updatedUsers.map(u => ({ id: u.id, username: u.username })));
+        // console.log("Index.tsx: Socket - usersUpdated received (count: " + updatedUsers.length + "):", updatedUsers.map(u => ({ id: u.id, username: u.username })));
         setUsers(updatedUsers);
-        console.log("Index.tsx: Socket - users state updated to (count: " + updatedUsers.length + "):", updatedUsers.map(u => ({ id: u.id, username: u.username })));
+        // console.log("Index.tsx: Socket - users state updated to (count: " + updatedUsers.length + "):", updatedUsers.map(u => ({ id: u.id, username: u.username })));
       });
 
       socketRef.current.on('gameStateUpdated', (updatedGameState) => {
@@ -98,10 +98,6 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     socketRef.current.emit('dethroneUser', { userId }); // Emit event to backend
   }, []); // No longer depends on 'socket', as socketRef.current is stable
 
-  const handleFindReigningUser = useCallback(() => {
-    return users.find(user => user.currentReignStart !== null);
-  }, [users]);
-
   //current user's info from Firebase auth.currentUser
   // This will be the actual authenticated user, combined with data from backend users array
   const firebaseUser = auth.currentUser;
@@ -137,11 +133,11 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
       try { //these states were null intially
         const headers = await getAuthHeaders();
         const [usersRes, gameStateRes, activityFeedRes] = await Promise.all([
-          fetch("https://king-of-audio.onrender.com/api/users", { headers }),
-          fetch("https://king-of-audio.onrender.com/api/current-game-state", {
+          fetch("http://localhost:5000/api/users", { headers }),
+          fetch("http://localhost:5000/api/current-game-state", {
             headers,
           }),
-          fetch("https://king-of-audio.onrender.com/api/activity-feed", {
+          fetch("http://localhost:5000/api/activity-feed", {
             headers,
           }),
           // Removed fetch for /api/current-user
@@ -177,7 +173,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
 
             try {
               const addUserResponse = await fetch(
-                "https://king-of-audio.onrender.com/api/add-new-user",
+                "http://localhost:5000/api/add-new-user",
                 {
                   method: "POST",
                   headers: headers,
@@ -295,7 +291,6 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
                 onNewActivityEvent={handleNewActivityEvent}
                 updateUserClipAndReign={handleUpdateUserClipAndReign}
                 dethroneUser={handleDethroneUser}
-                findReigningUser={handleFindReigningUser}
                 currentUser={currentUserData} // Pass currentUserData (Firebase user)
                 currentGameState={currentGameState}
                 users={users}

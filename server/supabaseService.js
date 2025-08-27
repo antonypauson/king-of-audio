@@ -109,11 +109,11 @@ export async function updateUserClipAndReignInSupabase(userId, newClipUrl, newRe
     console.log('updateUserClipAndReignInSupabase: userUpdateError, userUpdateData', userUpdateError, userUpdateData);
     const { data: gameStateUpdateData, error: gameStateUpdateError } = await supabase
         .from('game_state')
-        .update({
+        .upsert({
+            id: true, // Explicitly set the boolean ID
             reigning_user_id: userId,
             reign_start: new Date(newReignStart).toISOString(),
-        })
-        .eq('id', true) // Assuming 'id' is a boolean and always true for the single row
+        }, { onConflict: 'id' })
         .select();
     console.log('updateUserClipAndReignInSupabase: gameStateUpdateError, gameStateUpdateData', gameStateUpdateError, gameStateUpdateData);
 
@@ -167,11 +167,11 @@ export async function dethroneUserInSupabase(userId) {
     // 3. Clear the reigning_user_id and reign_start in the game_state table
     const { data: gameStateUpdateData, error: gameStateUpdateError } = await supabase
         .from('game_state')
-        .update({
+        .upsert({
+            id: true, // Explicitly set the boolean ID
             reigning_user_id: null,
             reign_start: null,
-        })
-        .eq('id', true) // Assuming 'id' is a boolean and always true for the single row
+        }, { onConflict: 'id' })
         .select();
 
     if (gameStateUpdateError) {

@@ -34,7 +34,6 @@ interface AudioPlayerProps {
   onNewActivityEvent: (event: any) => void;
   updateUserClipAndReign: (userId: string, newClipUrl: string, newReignStart: number) => void;
   dethroneUser: (userId: string) => void;
-  findReigningUser: () => User | undefined;
   currentUser: User;
   currentGameState: GameState;
   users: User[];
@@ -44,7 +43,6 @@ export default function AudioPlayer({
   onNewActivityEvent,
   updateUserClipAndReign,
   dethroneUser,
-  findReigningUser,
   currentUser,
   currentGameState,
   users,
@@ -119,7 +117,7 @@ export default function AudioPlayer({
           const idToken = await auth.currentUser?.getIdToken();
 
           const response = await fetch(
-            "https://king-of-audio.onrender.com/api/upload-audio",
+            "http://localhost:5000/api/upload-audio",
             {
               method: "POST",
               body: formData,
@@ -143,14 +141,11 @@ export default function AudioPlayer({
           console.log("AudioPlayer.tsx: isCurrentUserReigning:", isCurrentUserReigning);
 
           let dethronedUser = null;
-          if (!isCurrentUserReigning) {
-            const reigningPlayerInState = findReigningUser();
-            console.log("AudioPlayer.tsx: reigningPlayerInState (from findReigningUser()):", reigningPlayerInState);
-
-            if (reigningPlayerInState) {
-              dethronedUser = reigningPlayerInState;
+          if (!isCurrentUserReigning && currentGameState && currentGameState.currentUserId) {
+            dethronedUser = users.find(user => user.id === currentGameState.currentUserId);
+            if (dethronedUser) {
               console.log("AudioPlayer.tsx: Dethroning user with ID:", dethronedUser.id);
-              dethroneUser(dethronedUser.id); // Corrected: Pass dethronedUser.id
+              dethroneUser(dethronedUser.id);
             }
           }
 
@@ -204,7 +199,7 @@ export default function AudioPlayer({
     };
 
     uploadAudio();
-  }, [audioBlobUrl, onNewActivityEvent, currentUser, currentGameState, dethroneUser, findReigningUser, updateUserClipAndReign, isPlaying]);
+  }, [audioBlobUrl, onNewActivityEvent, currentUser, currentGameState, dethroneUser, updateUserClipAndReign, isPlaying, users]);
 
   useEffect(() => {
     // Initialize AudioContext and source node only once

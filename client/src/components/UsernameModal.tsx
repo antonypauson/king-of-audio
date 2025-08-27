@@ -63,7 +63,7 @@ const UsernameModal: React.FC<UsernameModalProps> = ({ user, onUsernameSet }) =>
       const headers = await getAuthHeaders();
       // Check uniqueness with backend
       const response = await fetch(
-        `https://king-of-audio.onrender.com/api/check-username-uniqueness?username=${trimmedUsername}`,
+        `http://localhost:5000/api/check-username-uniqueness?username=${trimmedUsername}`,
         { headers }
       );
       const data = await response.json();
@@ -84,7 +84,7 @@ const UsernameModal: React.FC<UsernameModalProps> = ({ user, onUsernameSet }) =>
 
       // Add user to backend mockUsers
       const addUserResponse = await fetch(
-        "https://king-of-audio.onrender.com/api/add-new-user",
+        "http://localhost:5000/api/add-new-user",
         {
           method: "POST",
           headers: headers,
