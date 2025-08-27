@@ -137,14 +137,19 @@ export default function AudioPlayer({
           const publicAudioUrl = data.publicUrl; // Get the public URL from the server
           console.log("AudioPlayer.tsx: Upload successful, publicAudioUrl:", publicAudioUrl);
 
+          console.log("AudioPlayer.tsx: currentGameState.currentUserId:", currentGameState.currentUserId);
+          console.log("AudioPlayer.tsx: currentUser.id:", currentUser.id);
           const isCurrentUserReigning = currentGameState.currentUserId === currentUser.id;
+          console.log("AudioPlayer.tsx: isCurrentUserReigning:", isCurrentUserReigning);
 
           let dethronedUser = null;
           if (!isCurrentUserReigning) {
             const reigningPlayerInState = findReigningUser();
+            console.log("AudioPlayer.tsx: reigningPlayerInState (from findReigningUser()):", reigningPlayerInState);
 
             if (reigningPlayerInState) {
               dethronedUser = reigningPlayerInState;
+              console.log("AudioPlayer.tsx: Dethroning user with ID:", dethronedUser.id);
               dethroneUser(dethronedUser.id); // Corrected: Pass dethronedUser.id
             }
           }

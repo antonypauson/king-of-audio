@@ -105,6 +105,8 @@ export async function updateUserClipAndReignInSupabase(userId, newClipUrl, newRe
     }
 
     // 2. Update the game_state table to reflect the new reigning user
+    console.log('updateUserClipAndReignInSupabase: userId, newClipUrl, newReignStart', userId, newClipUrl, newReignStart);
+    console.log('updateUserClipAndReignInSupabase: userUpdateError, userUpdateData', userUpdateError, userUpdateData);
     const { data: gameStateUpdateData, error: gameStateUpdateError } = await supabase
         .from('game_state')
         .update({
@@ -113,6 +115,7 @@ export async function updateUserClipAndReignInSupabase(userId, newClipUrl, newRe
         })
         .eq('id', true) // Assuming 'id' is a boolean and always true for the single row
         .select();
+    console.log('updateUserClipAndReignInSupabase: gameStateUpdateError, gameStateUpdateData', gameStateUpdateError, gameStateUpdateData);
 
     if (gameStateUpdateError) {
         console.error('Error updating game state in Supabase:', gameStateUpdateError);

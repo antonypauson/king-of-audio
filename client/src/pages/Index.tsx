@@ -29,7 +29,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     const user = auth.currentUser;
     if (user) {
       const idToken = await user.getIdToken();
-      console.log("Firebase token: ", idToken);
+      // console.log("Firebase token: ", idToken);
       return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`,
@@ -54,16 +54,21 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
       });
 
       socketRef.current.on('usersUpdated', (updatedUsers) => {
+        console.log("Index.tsx: Socket - usersUpdated received (count: " + updatedUsers.length + "):", updatedUsers.map(u => ({ id: u.id, username: u.username })));
         setUsers(updatedUsers);
+        console.log("Index.tsx: Socket - users state updated to (count: " + updatedUsers.length + "):", updatedUsers.map(u => ({ id: u.id, username: u.username })));
       });
 
       socketRef.current.on('gameStateUpdated', (updatedGameState) => {
+        console.log("Index.tsx: Socket - gameStateUpdated received:", { reigning_user_id: updatedGameState.currentUserId, reign_start: updatedGameState.reignStart });
         setCurrentGameState(updatedGameState);
+        console.log("Index.tsx: Socket - gameState state updated to:", { reigning_user_id: updatedGameState.currentUserId, reign_start: updatedGameState.reignStart });
       });
 
       socketRef.current.on('activityFeedUpdated', (updatedActivityFeed) => {
-        console.log('Frontend received activityFeedUpdated:', updatedActivityFeed);
+        console.log('Index.tsx: Socket - activityFeedUpdated received (count: ' + updatedActivityFeed.length + '):', updatedActivityFeed.slice(0, 5).map(e => e.type));
         setActivityFeed(updatedActivityFeed);
+        console.log('Index.tsx: Socket - activityFeed state updated to (count: ' + updatedActivityFeed.length + '):', updatedActivityFeed.slice(0, 5).map(e => e.type));
       });
 
       // Clean up socket listeners and disconnect on component unmount
@@ -84,6 +89,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
   
   // to set current user as new reigning palyer
   const handleUpdateUserClipAndReign = useCallback((userId: string, newClipUrl: string, newReignStart: number) => {
+    console.log("Index.tsx: Emitting 'updateUserClipAndReign' with:", { userId, newClipUrl, newReignStart });
     socketRef.current.emit('updateUserClipAndReign', { userId, newClipUrl, newReignStart }); // Emit event to backend
   }, []); // No longer depends on 'socket', as socketRef.current is stable
 
@@ -146,15 +152,17 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
           gameStateRes.json(),
           activityFeedRes.json(),
         ]);
-        console.log("Index.tsx: Initial fetch - usersData:", usersData);
-        console.log("Index.tsx: Initial fetch - gameStateData:", gameStateData);
-        console.log("Index.tsx: Initial fetch - activityFeedData:", activityFeedData);
+        console.log("Index.tsx: Initial fetch - usersData (count: " + usersData.length + "):", usersData.map(u => ({ id: u.id, username: u.username })));
+        console.log("Index.tsx: Initial fetch - gameStateData:", { reigning_user_id: gameStateData.reigning_user_id, reign_start: gameStateData.reign_start });
+        console.log("Index.tsx: Initial fetch - activityFeedData (count: " + activityFeedData.length + "):", activityFeedData.slice(0, 5).map(e => e.type));
 
         setUsers(usersData);
         setCurrentGameState(gameStateData);
         setActivityFeed(activityFeedData);
-        console.log("Index.tsx: State updated - users:", users);
-        console.log("Index.tsx: State updated - currentGameState:", currentGameState);
+        // Log the state *after* it's been set, but note that setState is async
+        console.log("Index.tsx: Initial fetch - After setState - users (might be stale, count: " + usersData.length + "):", usersData.map(u => ({ id: u.id, username: u.username })));
+        console.log("Index.tsx: Initial fetch - After setState - currentGameState (might be stale):");
+        console.log(gameStateData);
         // setCurrentUser is now handled by firebaseUser directly or derived from usersData
 
         // Check if Firebase user has a display name
