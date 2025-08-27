@@ -16,27 +16,34 @@ export const useAudioRecorder = (): AudioRecorderHook => {
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast(); // Initialize useToast
 
-  const startRecording = async () => {
+  """  const startRecording = async () => {
+    console.log('useAudioRecorder: startRecording called');
     try {
+      console.log('useAudioRecorder: Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('useAudioRecorder: Microphone access granted');
       mediaStreamRef.current = stream;
       const preferredMimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
                                 MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
 
       if (!preferredMimeType) {
+        console.error('useAudioRecorder: No supported audio MIME type found');
         throw new Error('No supported audio MIME type found for MediaRecorder.');
       }
 
+      console.log(`useAudioRecorder: Using MIME type: ${preferredMimeType}`);
       mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: preferredMimeType });
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
+        console.log('useAudioRecorder: ondataavailable event');
         audioChunksRef.current.push(event.data);
       };
 
       let timeoutId: NodeJS.Timeout; // Declare timeoutId here
 
       mediaRecorderRef.current.onstop = () => {
+        console.log('useAudioRecorder: onstop event');
         const audioBlob = new Blob(audioChunksRef.current, { type: preferredMimeType });
         const url = URL.createObjectURL(audioBlob);
         setAudioBlobUrl(url);
@@ -46,17 +53,19 @@ export const useAudioRecorder = (): AudioRecorderHook => {
       };
 
       mediaRecorderRef.current.start();
+      console.log('useAudioRecorder: Recording started');
       setIsRecording(true);
 
       // Force stop after 10 seconds as a fallback
       timeoutId = setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          console.log('useAudioRecorder: Stopping recording after 10s timeout');
           mediaRecorderRef.current.stop();
         }
       }, 10000);
 
     } catch (err: any) {
-      console.error('Error accessing microphone:', err);
+      console.error('useAudioRecorder: Error accessing microphone:', err);
       let errorMessage = "";
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         errorMessage = "Microphone access denied. Please allow microphone access in your browser settings.";
@@ -67,6 +76,7 @@ export const useAudioRecorder = (): AudioRecorderHook => {
       } else {
         errorMessage = `Error accessing microphone: ${err.message || err.name}`;
       }
+      console.log(`useAudioRecorder: Toasting error message: ${errorMessage}`);
       toast({
         title: "Recording Error",
         description: errorMessage,
@@ -75,7 +85,7 @@ export const useAudioRecorder = (): AudioRecorderHook => {
       setIsRecording(false);
       mediaStreamRef.current?.getTracks().forEach(track => track.stop());
     }
-  };
+  };""
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
