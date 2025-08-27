@@ -98,7 +98,7 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-background p-4 md:p-8 space-y-8 md:space-y-0 md:space-x-16"> 
+    <div className="flex flex-col md:flex-row items-center justify-center h-screen bg-background p-4 md:p-8 space-y-4 md:space-x-16"> 
       {isLoading ? ( // Conditional rendering for loading state
         <div className="flex items-center justify-center w-full h-full min-h-screen">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
@@ -107,11 +107,11 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
       ) : (
         <> {/* Use a fragment to return multiple elements */}
           {/* Left Column: Auth Form */}
-          <div className="w-full md:w-2/5 p-5 md:py-20 md:px-10 bg-card rounded-lg shadow-lg"> 
-            <h1 className="text-4xl font-bold text-foreground mb-8 text-center">King of Audio</h1>
+          <div className="w-full sm:w-4/5 md:w-2/5 p-4 sm:p-5 md:py-10 md:px-10 bg-card rounded-lg shadow-lg"> 
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-8 text-center">King of Audio</h1>
             {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
             {message && <p className="text-green-500 mb-4 text-center">{message}</p>}
-            <div className="space-y-4"> {/* Reverted space-y to 4 */}
+            <div className="space-y-4 max-w-md mx-auto"> {/* Reverted space-y to 4 */}
               <Input
                 type="email"
                 placeholder="Email"
@@ -128,14 +128,14 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
               />
               <Button
                 onClick={handleSignIn}
-                className="w-full bg-gradient-primary hover:bg-primary/80 transition-colors text-lg px-8 py-3 mb-2 hover:shadow-glow-primary-on-hover"
+                className="w-full bg-gradient-primary hover:bg-primary/80 transition-colors text-base sm:text-lg px-8 py-3 mb-2 hover:shadow-glow-primary-on-hover"
               >
                 Sign In
               </Button>
               <Button
                 onClick={handleSignUp}
                 variant="outline"
-                className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors text-lg px-8 py-3"
+                className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors text-base sm:text-lg px-8 py-3"
               >
                 Sign Up
               </Button>
@@ -143,7 +143,7 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
           </div>
 
           {/* Right Column: Meme Display */}
-          <div className="w-full md:w-3/5 max-w-md flex items-center justify-center"> {/* Changed md:w-1/2 to md:w-3/5 */}
+          <div className="w-full md:w-3/5 max-w-[200px] sm:max-w-md flex items-center justify-center"> {/* Changed md:w-1/2 to md:w-3/5 */}
             <div className="w-full h-auto pointer-events-none overflow-hidden">
               <div dangerouslySetInnerHTML={{ __html: currentMeme }} />
             </div>
