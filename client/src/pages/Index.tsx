@@ -21,6 +21,8 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
   const [currentUser, setCurrentUser] = useState(null); 
   const [isLoading, setIsLoading] = useState(true); 
   const [showUsernameModal, setShowUsernameModal] = useState(false); // New state for modal visibility 
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0); 
 
   const socketRef = useRef(null); // Declare socketRef
 
@@ -81,6 +83,24 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     };
     connectSocket(); // Call the async function
   }, []); // This is the dependency array for the outer useEffect
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
+        setIsHeaderVisible(false);
+      } else {
+        setIsHeaderVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   //to add new activity card
   const handleNewActivityEvent = useCallback((newEvent: any) => {
@@ -219,7 +239,9 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header
-        className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 ${
+        className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+        } ${
           showUsernameModal ? "blur-sm" : ""
         }`}
       >
@@ -327,12 +349,12 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
       {/* Footer for Bug Reports */}
       <footer className="py-4 text-center">
         <p className="text-xs text-muted-foreground">
-          Suggest bugs and errors on{" "}
+          Suggest bugs and errors {" "}
           <a
             href="https://github.com/antonypauson/king-of-audio"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-neon-blue underline"
+            className="text-neon-blue"
           >
             here
           </a>
