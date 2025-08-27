@@ -47,7 +47,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
         idToken = await user.getIdToken();
       }
 
-      socketRef.current = io("http://localhost:5000", {
+      socketRef.current = io("https://king-of-audio.onrender.com", {
         query: {
           token: idToken,
         },
@@ -133,11 +133,11 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
       try { //these states were null intially
         const headers = await getAuthHeaders();
         const [usersRes, gameStateRes, activityFeedRes] = await Promise.all([
-          fetch("http://localhost:5000/api/users", { headers }),
-          fetch("http://localhost:5000/api/current-game-state", {
+          fetch("https://king-of-audio.onrender.com/api/users", { headers }),
+          fetch("https://king-of-audio.onrender.com/api/current-game-state", {
             headers,
           }),
-          fetch("http://localhost:5000/api/activity-feed", {
+          fetch("https://king-of-audio.onrender.com/api/activity-feed", {
             headers,
           }),
           // Removed fetch for /api/current-user
@@ -173,7 +173,7 @@ const Index: React.FC<IndexProps> = ({ onDataLoaded }) => {
 
             try {
               const addUserResponse = await fetch(
-                "http://localhost:5000/api/add-new-user",
+                "https://king-of-audio.onrender.com/api/add-new-user",
                 {
                   method: "POST",
                   headers: headers,

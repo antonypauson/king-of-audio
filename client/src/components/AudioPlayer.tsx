@@ -117,7 +117,7 @@ export default function AudioPlayer({
           const idToken = await auth.currentUser?.getIdToken();
 
           const response = await fetch(
-            "http://localhost:5000/api/upload-audio",
+            "https://king-of-audio.onrender.com/api/upload-audio",
             {
               method: "POST",
               body: formData,
