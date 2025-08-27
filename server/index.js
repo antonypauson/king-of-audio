@@ -21,7 +21,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:8080", // socket server intialize
+        origin: ["http://localhost:8080", "https://king-of-audio.vercel.app"], // socket server intialize
         methods: ["GET", "POST"]
     }
 });
