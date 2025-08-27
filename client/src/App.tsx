@@ -16,6 +16,7 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authCheckComplete, setAuthCheckComplete] = useState(false); // New state for auth check completion
+  const [dataLoaded, setDataLoaded] = useState(false); // New state to track data loading in Index.tsx
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -34,6 +35,10 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
+  const handleDataLoaded = () => {
+    setDataLoaded(true);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -49,9 +54,9 @@ const App = () => {
             }>
               <Routes>
                 {isAuthenticated ? (
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Index onDataLoaded={handleDataLoaded} />} />
                 ) : (
-                  <Route path="/" element={<Auth />} />
+                  <Route path="/" element={<Auth onLoginSuccess={handleLoginSuccess} />} />
                 )}
                 <Route path="*" element={<NotFound />} />
               </Routes>

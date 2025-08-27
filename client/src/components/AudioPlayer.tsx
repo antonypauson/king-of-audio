@@ -184,10 +184,12 @@ export default function AudioPlayer({
           });
 
           if (isPlaying && audioRef.current) {
-            audioRef.current.src = publicAudioUrl; // Play the public URL
-            audioRef.current.onloadeddata = () => {
-              audioRef.current?.play().catch(e => console.error("Error playing new audio:", e));
-            };
+            // Removed automatic playback of new audio to comply with mobile autoplay policies.
+            // The user will need to click the 'Play Audio' button to hear the new clip.
+            // audioRef.current.src = publicAudioUrl; // Play the public URL
+            // audioRef.current.onloadeddata = () => {
+            //   audioRef.current?.play().catch(e => console.error("Error playing new audio:", e));
+            // };
           }
         } catch (error) {
           console.error("Error uploading audio:", error);

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useToast } from '../components/ui/use-toast'; // Import useToast
 
 interface AudioRecorderHook {
   isRecording: boolean;
@@ -13,59 +14,81 @@ export const useAudioRecorder = (): AudioRecorderHook => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const { toast } = useToast(); // Initialize useToast
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      const preferredMimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
+                                MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+
+      if (!preferredMimeType) {
+        throw new Error('No supported audio MIME type found for MediaRecorder.');
+      }
+
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: preferredMimeType });
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);
       };
 
-      // Consolidated onstop assignment
+      let timeoutId: NodeJS.Timeout; // Declare timeoutId here
+
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: preferredMimeType });
         const url = URL.createObjectURL(audioBlob);
         setAudioBlobUrl(url);
         setIsRecording(false);
-        mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // <--- Added this line
-        // No need for clearTimeout(timeoutId) here, as it's handled by the timeout itself
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
+        clearTimeout(timeoutId); // Clear timeout on manual stop
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
 
       // Force stop after 10 seconds as a fallback
-      setTimeout(() => { // Removed timeoutId assignment, as it's not cleared here
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') { // Check state before stopping
+      timeoutId = setTimeout(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
           mediaRecorderRef.current.stop();
         }
       }, 10000);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error accessing microphone:', err);
+      let errorMessage = "";
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMessage = "Microphone access denied. Please allow microphone access in your browser settings.";
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = "No microphone found. Please ensure a microphone is connected and enabled.";
+      } else if (err.name === 'NotReadableError') {
+        errorMessage = "Microphone is in use by another application. Please close other apps and try again.";
+      } else {
+        errorMessage = `Error accessing microphone: ${err.message || err.name}`;
+      }
+      toast({
+        title: "Recording Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
       setIsRecording(false);
-      mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // <--- Also stop on error
+      mediaStreamRef.current?.getTracks().forEach(track => track.stop());
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') { // Check state
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
-    mediaStreamRef.current?.getTracks().forEach(track => track.stop()); // Always stop tracks
+    mediaStreamRef.current?.getTracks().forEach(track => track.stop());
   };
 
   useEffect(() => {
     return () => {
-      // Cleanup: stop any active media stream tracks when component unmounts
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
       }
-      // Revoke object URL if it exists
       if (audioBlobUrl) {
         URL.revokeObjectURL(audioBlobUrl);
       }
